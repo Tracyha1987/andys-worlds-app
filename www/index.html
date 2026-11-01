@@ -252,6 +252,7 @@ img{display:block;max-width:100%}
 <div id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mtitle"><div class="mbox"><div class="chest" id="chest">🎁</div><h2 id="mtitle">Treasure!</h2><p id="mtext"></p><button class="primary" id="mbtn">Open</button></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
+<script src="access.js"></script>
 <script src="assets/questions.js"></script>
 <script>
 (()=>{'use strict';
@@ -364,6 +365,7 @@ function home(){const ws=worldsFor(P.grade),nw=WORLDS[nextTarget()];
  <div class="hero"><div class="hero-title"><strong>ANDY'S<br>WORLDS</strong><small>LEARN · BATTLE · WIN</small></div>
  <div class="hero-caption"><strong>Hey, ${title()}! ✨<br><span style="font-size:14px;font-weight:600">${countBossLeft()} bosses still waiting…</span></strong><span class="bubble">🤖 Let’s go!</span></div></div>
  <button class="primary pulse" data-a="quick">⚔️ PLAY <small>· ${esc(nw.name)}</small></button>
+ ${window.AndyAccess?AndyAccess.bannerHTML():''}
  ${giftReady()?`<button class="gift" data-a="gift"><span>🎁</span><div>Daily gift is ready!<small>Quà mỗi ngày · Chuỗi ${P.daily.last===yesterday()?P.daily.streak+1:1} ngày</small></div></button>`:`<div class="streak">🔥 ${P.daily.streak}-day streak · come back tomorrow for a new gift!</div>`}
  <div class="row2"><button class="ghost gold" data-a="shop">🛍️ Andy’s Shop</button><button class="ghost" data-a="parents">👪 Góc Ba Mẹ</button></div>
  <div class="sec">🎒 Choose your grade</div>
@@ -400,7 +402,7 @@ function buildRound(n){const g=P.grade,w=S.world,list=(bank[String(g)]||{})[w]||
  const scored=list.map(raw=>{const st=P.stats[qkey(g,w,raw[0])]||{c:0,w:0};const tier=st.w>st.c?0:(st.c+st.w===0?1:2+st.c*.1);return{raw,s:tier+Math.random()*.95}});
  scored.sort((a,b)=>a.s-b.s);return shuffle(scored.slice(0,n)).map(x=>normalize(x.raw,g,w))}
 function enemy(){return WORLDS[S.world].stages[S.stage]}
-function begin(stage){if(stage!==undefined)S.stage=stage;const e=enemy();
+function begin(stage){if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPaywall();return}if(stage!==undefined)S.stage=stage;const e=enemy();
  let hearts=HEARTS;if(S.usePotion&&P.potions>0){P.potions--;hearts++;save()}S.usePotion=false;
  S.round=buildRound(e.hp+hearts);if(!S.round.length){toast('No questions here yet. Pick another world.');S.page='home';render();return}
  Object.assign(S,{page:'battle',qi:0,hp:e.hp,maxHp:e.hp,hearts,startHearts:hearts,combo:0,maxCombo:0,fast:0,crits:0,missed:[],results:[],answered:false,hint:false,coinsWon:0,xpWon:0,startLevel:level(),newBadges:[],angry:false,chestOpened:false});
@@ -556,6 +558,7 @@ function parents(){const g=P.grade,ws=worldsFor(g);
  <div style="overflow-x:auto"><table class="ptable"><thead><tr><th>THẾ GIỚI</th><th>ĐÚNG</th><th>SỐ CÂU</th><th>MÀN</th></tr></thead><tbody>${rows}</tbody></table></div>
  <p style="margin-top:12px">Level ${level()} (${title()}) · Tổng ${P.earned} ⭐ đã kiếm · ${P.badges.length}/${BADGES.length} huy hiệu · Chuỗi ${P.daily.streak} ngày</p></div>
  <div class="panel"><h2>📚 Câu con hay sai</h2>${tricky.length?tricky.slice(0,12).map(t=>`<div class="review" style="margin-top:8px;padding-top:0;border:0"><div class="item" style="margin:0"><b>${esc(t.q.text)}</b><span class="ans">✔ ${esc(t.q.correct)}</span> · sai ${t.v.w} lần, đúng ${t.v.c} lần<br><i>${esc(t.q.vi)}</i></div></div>`).join(''):'<p>Chưa có câu sai nào ở lớp này. Khi con chơi, các câu con trả lời sai sẽ hiện ở đây kèm giải thích tiếng Việt.</p>'}</div>
+ ${window.AndyAccess?AndyAccess.parentHTML():''}
  <div class="panel"><h2>⚙️ Cài đặt</h2><p>Xóa toàn bộ sao, level, huy hiệu, đồ đã mua và thống kê trên máy này.</p>
  <button class="ghost ${S.resetArm?'danger':''}" data-a="reset">${S.resetArm?'⚠️ Chạm lần nữa để xóa hẳn':'🗑️ Xóa tiến trình'}</button></div></div>`}
 
@@ -568,6 +571,7 @@ function confetti(){if(reduce)return;const cv=$('#confetti'),ctx=cv.getContext('
 const PAGES={home,map,battle,result,parents,shop};
 function render(){hush();if(S.page!=='battle')musicStop();app.innerHTML=(PAGES[S.page]||home)();toTop();if(S.page==='battle')showQuestion()}
 function go(page){S.page=page;S.resetArm=false;render()}
+window.__andyRender=()=>{if(S.page==='home'||S.page==='parents'){const y=app.scrollTop,wy=scrollY;app.innerHTML=PAGES[S.page]();app.scrollTop=y;scrollTo(0,wy)}};window.__andyToast=toast;
 $('#mbtn').addEventListener('click',modalButton);
 app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;ac();
  if(d.grade){P.grade=Number(d.grade);save();sfx.tap();render();toast('Grade '+P.grade+' ✓');return}
@@ -589,6 +593,8 @@ app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dis
   case 'say-en':speak(S.round[S.qi].en);break;
   case 'say-vi':speak(S.round[S.qi].vi,'vi-VN');break;
   case 'parents':go('parents');break;
+  case 'paywall':window.AndyAccess&&AndyAccess.showPaywall();break;
+  case 'iap-restore':window.AndyAccess&&AndyAccess.restore();break;
   case 'shop':go('shop');break;
   case 'gift':openModal('daily');break;
   case 'chest':openModal('win');break;
