@@ -1,0 +1,6 @@
+node_modules/
+ios/
+android/
+www/fonts/
+build/
+.DS_Store
