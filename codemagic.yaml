@@ -1,8 +1,7 @@
 # Codemagic builds the iPhone app in the cloud (on a Mac) and uploads it to App Store Connect / TestFlight.
-# Before the first build, in Codemagic:
-#   1. Team settings > Integrations > Developer Portal: add your App Store Connect API key, name it  AndyWorldsKey
-#   2. Team settings > Code signing identities: generate an "Apple Distribution" certificate and fetch the
-#      App Store provisioning profile for com.ktsunshine.andysworlds
+# Every push to main starts a build automatically.
+# Code signing is automatic: Codemagic creates the certificate and App Store profile itself
+# using the App Store Connect API key "AndyWorldsKey" (Team settings > Integrations > Developer Portal).
 workflows:
   ios-app-store:
     name: Andy's Worlds - App Store
@@ -10,12 +9,16 @@ workflows:
     instance_type: mac_mini_m2
     integrations:
       app_store_connect: AndyWorldsKey
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+      cancel_previous_builds: true
+    cache:
+      cache_paths:
+        - $HOME/.andy-signing
     environment:
-      ios_signing:
-        provisioning_profiles:
-          - andy_profile
-        certificates:
-          - andy_dist
       node: 22.11.0
       xcode: latest
       cocoapods: default
@@ -42,8 +45,22 @@ workflows:
           sed -i '' 's/TARGETED_DEVICE_FAMILY = "1,2";/TARGETED_DEVICE_FAMILY = 1;/g' ios/App/App.xcodeproj/project.pbxproj
       - name: Sync web game into the app
         script: npx cap sync ios
-      - name: Code signing
-        script: xcode-project use-profiles
+      - name: Code signing (automatic - Codemagic creates certificate and profile itself)
+        script: |
+          set -e
+          keychain initialize
+          KEY_DIR="$HOME/.andy-signing"
+          mkdir -p "$KEY_DIR"
+          if [ ! -f "$KEY_DIR/cert_key.pem" ]; then
+            echo "No saved signing key yet - creating one (it is kept in the Codemagic cache)"
+            ssh-keygen -t rsa -b 2048 -m PEM -f "$KEY_DIR/cert_key.pem" -q -N ""
+          fi
+          app-store-connect fetch-signing-files "com.ktsunshine.andysworlds" \
+            --type IOS_APP_STORE \
+            --certificate-key=@file:"$KEY_DIR/cert_key.pem" \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Build number
         script: |
           cd ios/App
