@@ -354,6 +354,21 @@ img{display:block;max-width:100%}
 @keyframes tug{30%{transform:scaleY(1.12)}60%{transform:scaleY(.94)}}
 @keyframes glowhot{50%{box-shadow:0 0 22px #ff7a59}}
 @media(prefers-reduced-motion:reduce){.knot{transition:none}.dfloat,.dcount,.dq,.freeze,.dbig{animation:none}}
+.or{text-align:center;font-weight:800;font-size:13px;margin:14px 0 4px;opacity:.9}
+.joinrow{display:grid;grid-template-columns:1fr auto;gap:10px}
+.joinrow .primary{width:auto;padding:10px 20px}
+.codein{text-align:center;letter-spacing:.3em;text-transform:uppercase;font-size:24px}
+.netbox{background:var(--paper);color:var(--ink);border:3px solid #ffe09c;border-radius:20px;padding:14px;text-align:center;display:grid;gap:4px;margin:12px 0;box-shadow:0 6px 0 #0c1d5c88}
+.netbox small{font-size:13px;font-weight:700;opacity:.8}
+.netbox .code{font-size:54px;font-weight:800;letter-spacing:.16em;color:#2a3fae;line-height:1.1;-webkit-user-select:text;user-select:text}
+.netbox.ok{border-color:#4dc884}.netbox.bad{border-color:#ff8a9a;color:#8a2a3a}
+.spin{font-size:34px;animation:float 1.4s ease-in-out infinite}
+.vs{display:flex;justify-content:center;align-items:center;gap:18px;margin-top:6px}
+.vs span{font-size:46px;display:grid;justify-items:center;line-height:1.1}.vs span small{font-size:13px;font-weight:800;opacity:1}
+.vs i{font-style:normal;font-weight:800;font-size:22px;color:#e0458a}
+.oppbar{flex:none;padding:8px 12px;min-height:38px;text-align:center;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oppbar.o0{background:#173a9e}.oppbar.o1{background:#8a1f74}
+.rope.swap .line::before{background:#4aa8ffcc}.rope.swap .line::after{background:#ff5f9acc}
 </style>
 </head><body>
 
@@ -746,6 +761,7 @@ function duelsetup(){const c=duelCfg(),n0=pname(c.players[0],0),n1=pname(c.playe
   <input class="pname" data-pname="${i}" value="${esc(p.name)}" placeholder="Player ${i+1}" maxlength="12" aria-label="Player ${i+1} name" autocomplete="off" spellcheck="false">
   <div class="avs">${DUEL_AV.map(a=>`<button class="av ${a===p.emoji?'on':''}" data-av="${i}|${a}" aria-pressed="${a===p.emoji}" aria-label="Avatar ${a}">${a}</button>`).join('')}</div>
   <div class="mini">Grade · Lớp</div><div class="grades">${GRADES.map(g=>`<button class="grade ${g===p.grade?'active':''}" data-pgrade="${i}|${g}" aria-pressed="${g===p.grade}">${g}</button>`).join('')}</div></div>`}).join('')}
+ <button class="ghost gold full" data-a="online">🌐 Play online with a friend far away · Chơi online</button>
  <div class="sec">📖 Subject · Môn học</div>
  <div class="subjs">${DUEL_SUBJ.map(([k,ic,nm])=>`<button class="subj ${k===c.subj?'on':''}" data-subj="${k}" aria-pressed="${k===c.subj}">${ic} ${nm}</button>`).join('')}</div>
  <button class="ghost full ${c.face?'on':''}" data-a="duelface" aria-pressed="${c.face}">${c.face?'🔄 Face to face: top screen is flipped':'⬆️ Same side: nothing flipped'}</button>
@@ -759,45 +775,51 @@ function duelsetup(){const c=duelCfg(),n0=pname(c.players[0],0),n1=pname(c.playe
   <p class="vi"><b>Ba mẹ:</b> Mỗi người chọn lớp riêng, nên anh chị lớn và em nhỏ vẫn đấu công bằng. Đặt điện thoại nằm giữa hai bé (chế độ “Face to face”). Kết quả chế độ này không tính vào Báo cáo tuần của Andy.</p></div>
  <div class="note">Máy tính: Player 1 dùng phím A S D F · Player 2 dùng phím J K L ;</div></div>`}
 
-function duelStart(){if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPaywall();return}
- const c=duelCfg();duelClear();
- D={pos:0,go:false,over:false,winner:-1,t0:Date.now(),secs:0,timers:[],
-  pl:c.players.map((p,i)=>({name:pname(p,i),emoji:p.emoji,grade:p.grade,pool:duelPool(p.grade,c.subj),qi:0,q:null,lock:true,combo:0,best:0,c:0,w:0,missed:[]}))};
- if(D.pl.some(p=>!p.pool.length)){D=null;toast('No questions here yet. Pick another subject.');return}
+function myInfo(){const p=duelCfg().players[0];return{name:pname(p,0),emoji:p.emoji,grade:p.grade}}
+function duelStart(net){if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPaywall();return}
+ const c=duelCfg();duelClear();const me=net?(net.role==='host'?0:1):0,subj=net?net.subj:c.subj;
+ const info=net?(me===0?[myInfo(),net.opp]:[net.opp,myInfo()]):c.players.map((p,i)=>({name:pname(p,i),emoji:p.emoji,grade:p.grade}));
+ D={net:!!net,me,subj,pos:0,go:false,over:false,winner:-1,t0:Date.now(),secs:0,timers:[],
+  pl:info.map((p,i)=>({name:p.name,emoji:p.emoji,grade:p.grade,pool:(!net||i===me)?duelPool(p.grade,subj):[],qi:0,q:null,lock:true,combo:0,best:0,c:0,w:0,missed:[],fz:false}))};
+ if(D.pl.some((p,i)=>(!net||i===me)&&!p.pool.length)){D=null;toast('No questions here yet. Pick another subject.');return}
  quitArm=0;S.newBadges=[];S.page='duel';render();duelCountdown()}
+function ropeHTML(l,r){return `<div class="rope ${l===0?'swap':''}" id="rope"><button class="iconbtn quit" data-a="duelquit" aria-label="Quit duel">✕</button>
+  <div class="ropetrack" role="img" aria-label="Tug of war rope"><span class="end e${l}">${D.pl[l].emoji}</span><div class="line"><span class="mid"></span><i class="knot" id="knot">🎀</i></div><span class="end e${r}">${D.pl[r].emoji}</span></div></div>`}
 function duel(){const c=duelCfg();
- return `<div class="duel ${c.face?'face':''}">${duelHalf(1)}
- <div class="rope" id="rope"><button class="iconbtn quit" data-a="duelquit" aria-label="Quit duel">✕</button>
-  <div class="ropetrack" role="img" aria-label="Tug of war rope"><span class="end e1">${D.pl[1].emoji}</span><div class="line"><span class="mid"></span><i class="knot" id="knot">🎀</i></div><span class="end e0">${D.pl[0].emoji}</span></div></div>
- ${duelHalf(0)}</div>`}
+ if(D.net){const o=1-D.me;return `<div class="duel online"><div class="oppbar o${o}" id="oppst" aria-live="polite"></div>${ropeHTML(o,D.me)}${duelHalf(D.me)}</div>`}
+ return `<div class="duel ${c.face?'face':''}">${duelHalf(1)}${ropeHTML(1,0)}${duelHalf(0)}</div>`}
 function duelHalf(i){const p=D.pl[i];return `<section class="half p${i}" id="half${i}" aria-label="${esc(p.name)}">
  <div class="hhead"><span>${p.emoji} ${esc(p.name)}<small>Grade ${p.grade}</small></span><span class="pulls" id="pulls${i}"></span></div>
  <div class="hq" id="hq${i}"></div><div class="freeze" id="frz${i}" hidden></div></section>`}
 function duelCountdown(){let n=3;const tick=()=>{const txt=n>0?String(n):'GO!';
   [0,1].forEach(i=>{const el=$('#hq'+i);if(el)el.innerHTML=`<div class="dcount">${n===3?`<div>${txt}<small>Get ready, ${esc(D.pl[i].name)}!</small></div>`:txt}</div>`});
   if(n>0){tone(523,.15,'triangle',0,.07);n--;duelLater(tick,800)}
-  else{tone(1047,.35,'triangle',0,.09);buzz(60);duelLater(()=>{D.go=true;D.t0=Date.now();duelQ(0);duelQ(1);musicStart()},450)}};
- tick()}
-function duelQ(i){const p=D.pl[i];if(p.qi>=p.pool.length)p.pool=p.pool.concat(duelPool(p.grade,duelCfg().subj));
- p.q=p.pool[p.qi++];p.lock=false;const el=$('#hq'+i);if(!el)return;
+  else{tone(1047,.35,'triangle',0,.09);buzz(60);duelLater(()=>{D.go=true;D.t0=Date.now();if(D.net)duelQ(D.me);else{duelQ(0);duelQ(1)}musicStart()},450)}};
+ tick();if(D.net)oppStatus()}
+function duelQ(i){const p=D.pl[i];if(p.qi>=p.pool.length)p.pool=p.pool.concat(duelPool(p.grade,D.subj));
+ p.q=p.pool[p.qi++];p.lock=false;p.fz=false;const el=$('#hq'+i);if(!el)return;
  el.innerHTML=`<div class="dq">${esc(p.q.text)}</div><div class="danswers">${p.q.options.map((o,j)=>`<button class="answer" data-dans="${i}-${j}" aria-label="${esc(p.name)} answer ${j+1}: ${esc(o.v)}"><span class="k" aria-hidden="true">${DUEL_KEYS[i][j].toUpperCase()}</span>${esc(o.v)}</button>`).join('')}</div>`;
  el.scrollTop=el.scrollHeight;duelStatus(i)}
-function duelStatus(i){const p=D.pl[i],el=$('#pulls'+i);if(el)el.textContent=`${p.combo>=2?'🔥x'+p.combo+' · ':''}✔ ${p.c}`}
+function duelStatus(i){const p=D.pl[i],el=$('#pulls'+i);if(el)el.textContent=`${p.combo>=2?'🔥x'+p.combo+' · ':''}✔ ${p.c}`;if(D.net&&i===D.me)netSend({t:'st',c:p.c,combo:p.combo,fz:p.fz})}
+function oppStatus(){const el=$('#oppst');if(!el||!D)return;const o=D.pl[1-D.me];el.textContent=`${o.emoji} ${o.name} · Grade ${o.grade} · ✔ ${o.c}${o.combo>=2?' · 🔥x'+o.combo:''}${o.fz?' · ❄️ frozen!':''}`}
 function duelFloat(i,text){const h=$('#half'+i);if(!h)return;const f=document.createElement('div');f.className='dfloat';f.textContent=text;h.appendChild(f);setTimeout(()=>f.remove(),950)}
-function duelRope(){const k=$('#knot');if(!k)return;k.style.left=(50+D.pos/DUEL_WIN*45)+'%';
+function duelRope(){const k=$('#knot');if(!k)return;const v=D.net&&D.me===1?-D.pos:D.pos;k.style.left=(50+v/DUEL_WIN*45)+'%';
  const r=$('#rope');animClass(r,'tug',360);r.classList.toggle('hot',Math.abs(D.pos)>=DUEL_WIN-1);
- $('#half0')?.classList.toggle('lead',D.pos>0);$('#half1')?.classList.toggle('lead',D.pos<0)}
+ $('#half0')?.classList.toggle('lead',D.pos>0);$('#half1')?.classList.toggle('lead',D.pos<0);
+ [0,1].forEach(h=>{if((h===0?D.pos:-D.pos)===-(DUEL_WIN-1))duelFloat(h,'⚠️ Pull back!')})}
+function duelPull(i,pull){if(D.net&&D.me===1){netSend({t:'ans',pull});return false}
+ D.pos=Math.max(-DUEL_WIN,Math.min(DUEL_WIN,D.pos+(i===0?pull:-pull)));duelRope();if(D.net)netSend({t:'pos',pos:D.pos});
+ if(Math.abs(D.pos)>=DUEL_WIN){if(D.net)netSend({t:'end',w:i});duelEnd(i);return true}return false}
 function duelAnswer(i,j){if(!D||D.over||!D.go||S.page!=='duel')return;const p=D.pl[i];if(p.lock||!p.q)return;const o=p.q.options[j];if(!o)return;
  p.lock=true;const btns=[...$('#hq'+i).querySelectorAll('.answer')];btns.forEach(b=>b.disabled=true);
  if(o.ok){btns[j].classList.add('correct');p.c++;p.combo++;p.best=Math.max(p.best,p.combo);const power=p.combo%3===0,pull=power?2:1;
-  D.pos=Math.max(-DUEL_WIN,Math.min(DUEL_WIN,D.pos+(i===0?pull:-pull)));sfx.good(p.combo);if(power)sfx.crit();
+  sfx.good(p.combo);if(power)sfx.crit();
   try{const H=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics;H&&H.impact({style:power?'HEAVY':'LIGHT'})}catch(e){}
-  duelFloat(i,power?'💪 SUPER PULL!':pick(['Pull! 💪','Yes! ✨','Nice! 🌟','Great! 🔥']));duelRope();duelStatus(i);
-  if(Math.abs(D.pos)>=DUEL_WIN){duelEnd(i);return}
-  if(Math.abs(D.pos)===DUEL_WIN-1)duelFloat(1-i,'⚠️ Pull back!');
+  duelFloat(i,power?'💪 SUPER PULL!':pick(['Pull! 💪','Yes! ✨','Nice! 🌟','Great! 🔥']));duelStatus(i);
+  if(duelPull(i,pull))return;
   duelLater(()=>duelQ(i),500)}
- else{btns[j].classList.add('wrong');btns.forEach((b,k)=>{if(p.q.options[k].ok)b.classList.add('correct')});p.w++;p.combo=0;p.missed.push(p.q);sfx.bad();buzz(90);duelStatus(i);
-  const f=$('#frz'+i);if(f){f.innerHTML=`<b>❄️ Frozen!</b><span>✔ ${esc(p.q.correct)}</span>`;f.hidden=false}
+ else{btns[j].classList.add('wrong');btns.forEach((b,k)=>{if(p.q.options[k].ok)b.classList.add('correct')});p.w++;p.combo=0;p.fz=true;p.missed.push(p.q);sfx.bad();buzz(90);
+  const f=$('#frz'+i);if(f){f.innerHTML=`<b>❄️ Frozen!</b><span>✔ ${esc(p.q.correct)}</span>`;f.hidden=false}duelStatus(i);
   duelLater(()=>{const f2=$('#frz'+i);if(f2)f2.hidden=true;duelQ(i)},FREEZE_MS)}}
 function duelEnd(i){D.over=true;D.winner=i;D.secs=Math.round((Date.now()-D.t0)/1000);duelClear();musicStop();
  const c=duelCfg(),n=D.pl[i].name;c.record[n]=(c.record[n]||0)+1;c.games=(c.games||0)+1;S.newBadges=[];earn('duel');save();
@@ -805,21 +827,86 @@ function duelEnd(i){D.over=true;D.winner=i;D.secs=Math.round((Date.now()-D.t0)/1
  $('#half'+i)?.insertAdjacentHTML('beforeend','<div class="dbig win">🏆<br>YOU WIN!</div>');
  $('#half'+(1-i))?.insertAdjacentHTML('beforeend','<div class="dbig">💪<br>So close!<br><small style="font-size:18px">Rematch?</small></div>');
  duelLater(()=>go('duelresult'),2300)}
-function duelQuit(){if(Date.now()-quitArm>2500){quitArm=Date.now();toast('Tap ✕ again to quit');return}duelClear();if(D)D.over=true;musicStop();go('duelsetup')}
+function duelQuit(){if(Date.now()-quitArm>2500){quitArm=Date.now();toast('Tap ✕ again to quit');return}duelClear();if(D)D.over=true;musicStop();if(D&&D.net){netSend({t:'bye'});netClose();go('online')}else go('duelsetup')}
 function duelresult(){if(!D||D.winner<0)return duelsetup();const c=duelCfg(),w=D.pl[D.winner],l=D.pl[1-D.winner];
  return `<div class="screen">${header(true)}
  <div class="dres"><div class="crown">👑</div><div class="wavatar">${w.emoji}</div><h2>${esc(w.name)} wins!</h2><p>${esc(w.name)} thắng rồi! · ${D.secs}s · ${esc(l.name)} cố lên lần sau nhé 💪</p></div>
  <div class="dstats">${[0,1].map(k=>{const p=D.pl[k];return `<div class="dcard ${k===D.winner?'won':''}"><b>${p.emoji} ${esc(p.name)}</b><small>Grade ${p.grade}</small><ul><li>✔ ${p.c} right</li><li>✖ ${p.w} wrong</li><li>🔥 Best combo ${p.best}</li><li>🏆 ${c.record[p.name]||0} total wins</li></ul></div>`}).join('')}</div>
  <div id="badgeslot">${badgeHTML()}</div>
- <button class="primary pulse" data-a="duelgo">🔁 REMATCH · Đấu lại</button>
- <div class="row2"><button class="ghost" data-a="duelsetup">⚙️ Players</button><button class="ghost gold" data-a="home">🏠 Home</button></div>
+ <button class="primary pulse" data-a="${D.net?'netagain':'duelgo'}">🔁 REMATCH · Đấu lại</button>
+ <div class="row2">${D.net?'<button class="ghost" data-a="netcancel">🚪 Leave room</button>':'<button class="ghost" data-a="duelsetup">⚙️ Players</button>'}<button class="ghost gold" data-a="home">🏠 Home</button></div>
  ${D.pl.some(p=>p.missed.length)?`<div class="dreview"><div class="review" style="border:0">${D.pl.map(p=>p.missed.length?`<h3>📚 ${esc(p.name)} · Ôn lại câu sai</h3>${p.missed.slice(-5).map(q=>`<div class="item"><b>${esc(q.text)}</b><span class="ans">✔ ${esc(q.correct)}</span><br>${esc(q.en)}<br><i>${esc(q.vi)}</i></div>`).join('')}`:'').join('')}</div></div>`:''}
  </div>`}
-function duelRerender(){const y=app.scrollTop,wy=scrollY;app.innerHTML=duelsetup();app.scrollTop=y;scrollTo(0,wy)}
+function duelRerender(){const y=app.scrollTop,wy=scrollY;app.innerHTML=(PAGES[S.page]||duelsetup)();app.scrollTop=y;scrollTo(0,wy)}
+
+/* ---------- online duel: two phones, peer-to-peer, joined with a room code ---------- */
+const NET_PREFIX='andysworlds-v1-',CODE_CH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+let NET=null,joinCode='';
+function peerLib(cb){if(window.Peer)return cb();const s=document.createElement('script');s.src='vendor/peerjs.min.js';s.onload=()=>cb();s.onerror=()=>netFail({type:'network'});document.head.appendChild(s)}
+function netSend(m){try{NET&&NET.conn&&NET.conn.open&&NET.conn.send(m)}catch(e){}}
+function netClose(){const N=NET;NET=null;if(!N)return;try{N.conn&&N.conn.close()}catch(e){}try{N.peer&&N.peer.destroy()}catch(e){}}
+function netShow(){if(S.page==='online')duelRerender()}
+function netFail(e){const t=e&&e.type,msg=t==='peer-unavailable'?'Room not found. Check the code! · Không tìm thấy phòng':t==='timeout'?'Could not connect. Try again! · Không kết nối được':t==='full'?'That room is already full · Phòng đã đủ người':t==='lost'?'Your friend left the game · Bạn kia đã thoát':'No connection. Check the internet! · Kiểm tra mạng Internet';
+ const inGame=S.page==='duel'&&D&&!D.over;if(inGame){D.over=true;duelClear();musicStop()}
+ netClose();NET={status:'error',msg};if(S.page==='online')netShow();else if(S.page==='duel'||S.page==='duelresult'){toast('😢 '+msg.split(' · ')[0]);go('online')}}
+function netHost(){if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPaywall();return}
+ netClose();const code=Array.from({length:5},()=>pick([...CODE_CH])).join(''),N={role:'host',code,status:'starting'};NET=N;netShow();
+ peerLib(()=>{if(NET!==N)return;const peer=new Peer(NET_PREFIX+code,window.ANDY_PEER_OPTS||{});N.peer=peer;
+  peer.on('open',()=>{if(NET===N&&N.status==='starting'){N.status='waiting';netShow()}});
+  peer.on('connection',c=>{if(NET!==N)return;if(N.conn){c.on('open',()=>{try{c.send({t:'full'})}catch(e){}setTimeout(()=>c.close(),400)});return}netWire(N,c)});
+  peer.on('disconnected',()=>{if(NET===N&&!N.conn)try{peer.reconnect()}catch(e){}});
+  peer.on('error',e=>{if(NET!==N)return;if(e.type==='unavailable-id'){netHost();return}if(N.conn&&N.conn.open)return;netFail(e)})})}
+function netJoin(){if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPaywall();return}
+ const code=joinCode.toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==5){toast('Enter the 5-letter room code');return}
+ netClose();const N={role:'guest',code,status:'connecting'};NET=N;netShow();
+ peerLib(()=>{if(NET!==N)return;const peer=new Peer(undefined,window.ANDY_PEER_OPTS||{});N.peer=peer;
+  peer.on('open',()=>{if(NET!==N)return;netWire(N,peer.connect(NET_PREFIX+code,{reliable:true}))});
+  peer.on('error',e=>{if(NET===N&&!(N.conn&&N.conn.open))netFail(e)});
+  setTimeout(()=>{if(NET===N&&N.status==='connecting')netFail({type:'timeout'})},20000)})}
+function netWire(N,c){N.conn=c;c.on('open',()=>{if(NET!==N)return;N.status='connected';netSend({t:'hello',...myInfo()});sfx.coin();netShow()});
+ c.on('data',m=>{if(NET===N)netData(m)});c.on('close',()=>{if(NET===N)netFail({type:'lost'})});c.on('error',()=>{if(NET===N)netFail({type:'lost'})})}
+function netData(m){if(!m||typeof m!=='object')return;const N=NET;
+ switch(m.t){
+  case 'hello':N.opp={name:String(m.name||'Friend').slice(0,12),emoji:DUEL_AV.includes(m.emoji)?m.emoji:'🙂',grade:GRADES.includes(Number(m.grade))?Number(m.grade):4};netShow();break;
+  case 'full':netFail({type:'full'});break;
+  case 'bye':netFail({type:'lost'});break;
+  case 'start':if(N.role==='guest'&&N.opp){N.subj=DUEL_SUBJ.some(s=>s[0]===m.subj)?m.subj:'mix';duelStart(N)}break;
+  case 'again':if(N.role==='host'&&S.page!=='duel')netStartHost();break;
+  case 'ans':if(N.role==='host'&&D&&D.net&&D.go&&!D.over)duelPull(1,m.pull===2?2:1);break;
+  case 'pos':if(N.role==='guest'&&D&&D.net&&!D.over){D.pos=Math.max(-DUEL_WIN,Math.min(DUEL_WIN,Number(m.pos)||0));duelRope()}break;
+  case 'end':if(N.role==='guest'&&D&&D.net&&!D.over)duelEnd(m.w===0?0:1);break;
+  case 'st':if(D&&D.net){const o=D.pl[1-D.me];o.c=Number(m.c)||0;o.combo=Number(m.combo)||0;o.fz=!!m.fz;oppStatus()}break;
+ }}
+function netStartHost(){if(!NET||NET.role!=='host'||!NET.opp)return;if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPaywall();return}
+ NET.subj=duelCfg().subj;netSend({t:'start',subj:NET.subj});duelStart(NET)}
+async function netShare(){if(!NET||!NET.code)return;const t=`Play Tug of War with me in Andy's Worlds! Room code: ${NET.code}`;
+ try{if(navigator.share){await navigator.share({text:t});return}}catch(e){if(e&&e.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(NET.code);toast('Code copied!')}catch(e){toast('Code: '+NET.code)}}
+function online(){const c=duelCfg(),p=c.players[0],N=NET,st=N?N.status:'idle';let box='';
+ if(st==='idle'||st==='error')box=`${st==='error'?`<div class="netbox bad"><b>😕 ${esc(N.msg)}</b></div>`:''}
+  <button class="primary" data-a="nethost" style="margin-top:12px">🏠 Create a room · Tạo phòng</button>
+  <div class="or">or join a friend · hoặc vào phòng của bạn</div>
+  <div class="joinrow"><input class="pname codein" data-code="1" value="${esc(joinCode)}" placeholder="CODE" maxlength="5" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Room code"><button class="primary" data-a="netjoin">Join</button></div>`;
+ else if(st==='starting'||st==='connecting')box=`<div class="netbox"><div class="spin">⏳</div><b>${st==='starting'?'Creating your room…':'Joining room '+esc(N.code)+'…'}</b></div><button class="ghost full" data-a="netcancel">✕ Cancel</button>`;
+ else if(st==='waiting')box=`<div class="netbox"><small>ROOM CODE · MÃ PHÒNG</small><div class="code">${esc(N.code)}</div><b>Tell your friend this code!</b><small>Đọc mã này cho bạn kia nhập vào máy của bạn ấy</small><div class="spin">📡</div><small>Waiting for your friend…</small></div><div class="row2"><button class="ghost gold" data-a="netshare">📤 Share code</button><button class="ghost" data-a="netcancel">✕ Cancel</button></div>`;
+ else{const o=N.opp;box=`<div class="netbox ok"><b>✅ Connected! · Đã kết nối</b>${o?`<div class="vs"><span>${p.emoji}<small>${esc(pname(p,0))} · G${p.grade}</small></span><i>VS</i><span>${o.emoji}<small>${esc(o.name)} · G${o.grade}</small></span></div>`:'<small>Saying hello…</small>'}</div>
+  ${N.role==='host'?`<div class="sec">📖 Subject · Môn học</div><div class="subjs">${DUEL_SUBJ.map(([k,ic,nm])=>`<button class="subj ${k===c.subj?'on':''}" data-subj="${k}" aria-pressed="${k===c.subj}">${ic} ${nm}</button>`).join('')}</div>
+  <button class="primary pulse" data-a="netstart" style="margin-top:14px" ${o?'':'disabled'}>⚔️ START DUEL</button>`:`<div class="netbox"><div class="spin">⏳</div><b>Waiting for ${esc(o?o.name:'your friend')} to start…</b><small>Chờ chủ phòng bấm bắt đầu</small></div>`}
+  <button class="ghost full" data-a="netcancel">🚪 Leave room</button>`}
+ const edit=st==='idle'||st==='error';
+ return `<div class="screen">${header(true)}
+ <div class="chapter"><span>🌐 Play Online</span></div>
+ <p class="dintro">Đấu Kéo co với bạn ở xa! Một người <b>tạo phòng</b>, người kia <b>nhập mã phòng</b>. Cả hai máy cần có Internet.</p>
+ ${edit?`<div class="pcard p0"><div class="ptitle">YOU · BẠN</div>
+  <input class="pname" data-pname="0" value="${esc(p.name)}" placeholder="Your name" maxlength="12" aria-label="Your name" autocomplete="off" spellcheck="false">
+  <div class="avs">${DUEL_AV.map(a=>`<button class="av ${a===p.emoji?'on':''}" data-av="0|${a}" aria-pressed="${a===p.emoji}" aria-label="Avatar ${a}">${a}</button>`).join('')}</div>
+  <div class="mini">Grade · Lớp</div><div class="grades">${GRADES.map(g=>`<button class="grade ${g===p.grade?'active':''}" data-pgrade="0|${g}" aria-pressed="${g===p.grade}">${g}</button>`).join('')}</div></div>`:''}
+ ${box}
+ <div class="rules" style="margin-top:16px"><p class="vi" style="margin:0;border:0;padding:0"><b>Ba mẹ:</b> Hai máy kết nối với nhau bằng mã phòng (qua dịch vụ kết nối miễn phí PeerJS). Chỉ gửi tên, hình đại diện, lớp và điểm của ván đấu. Không có chat, không cần tài khoản, không lưu lại thông tin. Nên chơi với người quen.</p></div></div>`}
 
 /* ---------- render & events ---------- */
-const PAGES={home,map,battle,result,parents,shop,duelsetup,duel,duelresult};
-function render(){hush();if(S.page!=='battle'&&S.page!=='duel')musicStop();if(S.page!=='duel')duelClear();app.innerHTML=(PAGES[S.page]||home)();toTop();if(S.page==='battle')showQuestion()}
+const PAGES={home,map,battle,result,parents,shop,duelsetup,duel,duelresult,online};
+function render(){hush();if(S.page!=='battle'&&S.page!=='duel')musicStop();if(S.page!=='duel')duelClear();if(NET&&!['online','duel','duelresult'].includes(S.page))netClose();app.innerHTML=(PAGES[S.page]||home)();toTop();if(S.page==='battle')showQuestion()}
 function go(page){S.page=page;S.resetArm=false;render()}
 window.__andyRender=()=>{if(S.page==='home'||S.page==='parents'){const y=app.scrollTop,wy=scrollY;app.innerHTML=PAGES[S.page]();app.scrollTop=y;scrollTo(0,wy)}};window.__andyToast=toast;
 $('#mbtn').addEventListener('click',modalButton);
@@ -855,6 +942,13 @@ app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dis
   case 'duelgo':sfx.tap();duelStart();break;
   case 'duelface':{const c=duelCfg();c.face=!c.face;save();sfx.tap();duelRerender()}break;
   case 'duelquit':duelQuit();break;
+  case 'online':sfx.tap();go('online');break;
+  case 'nethost':sfx.tap();netHost();break;
+  case 'netjoin':sfx.tap();netJoin();break;
+  case 'netcancel':sfx.tap();netClose();go('online');break;
+  case 'netstart':sfx.tap();netStartHost();break;
+  case 'netagain':sfx.tap();if(!NET||!NET.conn){go('online');break}if(NET.role==='host')netStartHost();else{netSend({t:'again'});toast('Asking for a rematch…')}break;
+  case 'netshare':netShare();break;
   case 'gift':openModal('daily');break;
   case 'chest':openModal('win');break;
   case 'potion':S.usePotion=!S.usePotion;sfx.tap();{const y=app.scrollTop,wy=scrollY;app.innerHTML=map();app.scrollTop=y;scrollTo(0,wy)}break;
@@ -863,9 +957,9 @@ app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dis
   case 'sound':P.sound=!P.sound;save();if(!P.sound){hush();musicStop()}else{sfx.tap();if(S.page==='battle')musicStart()}b.textContent=P.sound?'🔊':'🔇';b.setAttribute('aria-label',P.sound?'Turn sound off':'Turn sound on');toast(P.sound?'🔊 Sound on':'🔇 Sound off');break;
  }});
 app.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-dans]');if(!b||b.disabled)return;e.preventDefault();ac();const [i,j]=b.dataset.dans.split('-').map(Number);duelAnswer(i,j)});
-app.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.pname!==undefined){duelCfg().players[Number(t.dataset.pname)].name=t.value.slice(0,12);save()}});
+app.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.pname!==undefined){duelCfg().players[Number(t.dataset.pname)].name=t.value.slice(0,12);save()}if(t.dataset&&t.dataset.code!==undefined)joinCode=t.value});
 document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey)return;
- if(S.page==='duel'&&!(e.target&&e.target.matches&&e.target.matches('input'))){const k=e.key.toLowerCase();for(let i=0;i<2;i++){const j=DUEL_KEYS[i].indexOf(k);if(j>=0){e.preventDefault();duelAnswer(i,j);return}}}
+ if(S.page==='duel'&&!(e.target&&e.target.matches&&e.target.matches('input'))){const k=e.key.toLowerCase();for(let i=0;i<2;i++){const j=DUEL_KEYS[i].indexOf(k);if(j>=0){e.preventDefault();duelAnswer(D&&D.net?D.me:i,j);return}}}
  if(!$('#modal').hidden){if(e.key==='Enter'||e.key===' '||e.key==='Escape'){e.preventDefault();if(e.key==='Escape'&&chestState&&!chestState.opened)return;modalButton()}return}
  if(S.page==='battle'){if(!S.answered&&/^[1-4]$/.test(e.key)){e.preventDefault();answer(Number(e.key)-1)}
   else if(S.answered&&(e.key==='Enter'||e.key===' ')&&!(document.activeElement&&document.activeElement.matches('.tool'))){e.preventDefault();next()}
