@@ -93,7 +93,7 @@
     offer.order().then(function (err) {
       if (err) {
         busy = false;
-        if (!(window.CdvPurchase.ErrorCode && err.code === window.CdvPurchase.ErrorCode.PAYMENT_CANCELLED)) lastError = err.message || 'Purchase did not complete.';
+        var EC = window.CdvPurchase.ErrorCode || {}; var cancelled = err.code === EC.PAYMENT_CANCELLED || /cancel/i.test(err.message || ''); if (!cancelled) lastError = err.message || 'Purchase did not complete.';
         updatePaywall();
       }
     });
