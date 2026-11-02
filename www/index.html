@@ -243,8 +243,44 @@ img{display:block;max-width:100%}
 @keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
 @keyframes glow{50%{box-shadow:0 6px 0 #0c1d5c,0 0 26px #ffe066}}
 @keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.hero::before{content:'';position:absolute;inset:-4%;background:url('assets/andy_hero.webp') center 20%/cover no-repeat;animation:breathe 5s ease-in-out infinite;z-index:0}
+.hero>*{z-index:2}
+.world-card img{animation:kenburns 9s ease-in-out infinite alternate}
+.world-card:nth-child(2) img{animation-delay:-2s}.world-card:nth-child(3) img{animation-delay:-4s}.world-card:nth-child(4) img{animation-delay:-6s}.world-card:nth-child(5) img{animation-delay:-8s}
+.world-card .bosschip{animation:float 2.6s ease-in-out infinite}
+.art img{animation:kenburns 8s ease-in-out infinite alternate}
+.art .bubble,.hero-caption .bubble{animation:wiggle-s 3s ease-in-out infinite}
+.portrait img{animation:blink 4.5s infinite}
+.portrait.lunge{animation:lunge .45s ease-out!important}
+.portrait.hurt{animation:hurt .5s ease-out!important}
+.portrait.hurt img{filter:sepia(1) saturate(4) hue-rotate(-40deg)}
+.robo{animation:float 3s ease-in-out infinite}
+.andy-result{width:120px;height:120px;margin:0 auto 6px;border-radius:50%;overflow:hidden;border:5px solid #fff;box-shadow:0 0 0 4px #2f7ee0,0 10px 22px #000a}
+.andy-result img{width:100%;height:100%;object-fit:cover;object-position:center 15%}
+.andy-result.win{animation:victory 1s ease-in-out infinite}
+.andy-result.lose{animation:droop 2.4s ease-in-out infinite;filter:saturate(.6)}
+.done .big{animation:pop .6s ease-out,float 2.4s ease-in-out .6s infinite}
+.chestbtn{animation:wiggle 1.2s ease-in-out infinite}
+.eyebrow .topic{display:block;font-size:10px;letter-spacing:.06em;opacity:.8;margin-top:2px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:110px;margin:10px 0 4px}
+.week div{display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;font-size:10px;font-weight:700}
+.week i{display:block;width:70%;min-height:3px;border-radius:6px 6px 2px 2px;background:linear-gradient(#ffd54a,#ff9f1a);margin-bottom:3px}
+.week .today i{background:linear-gradient(#5ab8ff,#2f7ee0)}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}
+.kpis div{background:#ffffff14;border-radius:14px;padding:8px 10px}
+.kpis b{display:block;font-size:22px}.kpis small{font-size:11px;opacity:.85}
+.weak{margin:8px 0;padding:8px 10px;border-radius:12px;background:#ff5f8620;font-size:13px}
+@keyframes breathe{50%{transform:scale(1.05) translateY(-1%)}}
+@keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.08) translate(-1%,-1%)}}
+@keyframes wiggle-s{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-4deg)}90%{transform:rotate(4deg)}95%{transform:rotate(-2deg)}}
+@keyframes blink{0%,92%,100%{transform:scale(1)}95%{transform:scale(1.04,.96)}}
+@keyframes lunge{0%{transform:translateX(0)}35%{transform:translateX(26px) scale(1.12) rotate(6deg)}100%{transform:translateX(0)}}
+@keyframes hurt{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px) rotate(-8deg)}45%{transform:translateX(8px) rotate(5deg)}70%{transform:translateX(-4px)}}
+@keyframes victory{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-22px) rotate(-6deg)}50%{transform:translateY(0) scale(1.05,.95)}70%{transform:translateY(-10px) rotate(6deg)}}
+@keyframes droop{50%{transform:translateY(6px) rotate(-6deg)}}
 @media(max-width:380px){.hero-title strong{font-size:32px}.portrait{width:80px;height:80px}.bossface{font-size:50px}.mid{width:96px}.question{font-size:18px}.answer{font-size:15px}.grade{font-size:15px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.english .world-card img,.world-card[data-world=english] img{filter:hue-rotate(200deg) saturate(1.2)}
 </style>
 </head><body>
 
@@ -254,6 +290,9 @@ img{display:block;max-width:100%}
 <canvas id="confetti" aria-hidden="true"></canvas>
 <script src="access.js"></script>
 <script src="assets/questions.js"></script>
+<script src="assets/questions_more.js"></script>
+<script src="gen_math.js"></script>
+<script src="gen_english.js"></script>
 <script>
 (()=>{'use strict';
 const $=(s,r=document)=>r.querySelector(s);
@@ -275,6 +314,10 @@ const WORLDS={
   {name:'Sand Snake',emoji:'🐍',hp:4,taunt:'Sssso you think you know the past?'},
   {name:'Ghost Knight',emoji:'👻',hp:4,taunt:'Boo! I guard the old castle!'},
   {name:'Time Thief',emoji:'🦹',hp:6,boss:true,taunt:'I stole the pages of history! Ha ha!'}]},
+ english:{name:'Word Wizard Tower',icon:'📚',sub:'Words, grammar & reading',pic:'andy_hero.webp',scene:'scene_history.webp',stages:[
+  {name:'Spelling Goblin',emoji:'👺',hp:4,taunt:'Hehe! I mixed up all the letters!'},
+  {name:'Riddle Owl',emoji:'🦉',hp:4,taunt:'Hoo hoo! Which word is the right one?'},
+  {name:'Word Wizard',emoji:'🧙',hp:6,boss:true,taunt:'My spells are made of tricky words!'}]},
  space:{name:'Space Rescue',icon:'🚀',sub:'Save the galaxy',pic:'andy_space.webp',scene:'scene_space.webp',stages:[
   {name:'Space Rock',emoji:'☄️',hp:4,taunt:'Incoming! Dodge my meteor questions!'},
   {name:'Spy Saucer',emoji:'🛸',hp:4,taunt:'Beep boop. Scanning your brain…'},
@@ -286,7 +329,7 @@ const WORLDS={
 };
 const SKINS=[['star','⭐','Star Shot',0,'The classic!'],['fire','🔥','Fireball',30,'Hot hot hot!'],['bolt','⚡','Lightning',40,'Super fast zap'],['ice','❄️','Ice Blast',50,'Freeze the boss'],['heart','💖','Love Beam',60,'Kindness wins'],['rainbow','🌈','Rainbow',90,'The legendary shot']];
 const BADGES=[
- ['first','🏅','First Win'],['perfect','💎','Flawless'],['combo5','🔥','On Fire x5'],['speed','⚡','Lightning'],
+ ['first','🏅','First Win'],['bookworm','📚','Word Wizard'],['perfect','💎','Flawless'],['combo5','🔥','On Fire x5'],['speed','⚡','Lightning'],
  ['crit','💥','Critical Hit'],['brave','💪','Never Give Up'],['bossall','👑','Boss Slayer'],['explorer','🧭','Explorer'],
  ['shopper','🛍️','Shopper'],['daily3','📅','3-Day Streak'],['level5','🦸','Level 5 Hero'],['rich','🌟','100 Stars']];
 const PRAISE=['Awesome!','You nailed it!','Boom! Direct hit!','Super smart!','Keep going!','Wow, great job!'];
@@ -294,12 +337,12 @@ const CHEER=['It’s OK! Learn it and strike back!','Oops! Read why, then try th
 
 /* ---------- saved progress ---------- */
 const KEY='andy_worlds_v3';
-function fresh(){return{grade:4,sound:true,coins:0,earned:0,xp:0,best:{},badges:[],stats:{},bossWins:[],worldsWon:[],owned:['star'],skin:'star',potions:0,daily:{last:'',streak:0}}}
+function fresh(){return{grade:4,sound:true,coins:0,earned:0,xp:0,best:{},badges:[],stats:{},bossWins:[],worldsWon:[],owned:['star'],skin:'star',potions:0,daily:{last:'',streak:0},days:{},topics:{}}}
 function load(){let d=null;try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
  if(!d){d={};try{const o=JSON.parse(localStorage.getItem('andy_worlds_v2')||'null');
    if(o){['grade','sound','coins','earned','xp','badges','stats','worldsWon'].forEach(k=>{if(o[k]!==undefined)d[k]=o[k]});d.best={};Object.entries(o.best||{}).forEach(([k,v])=>{d.best[k+'-0']=v});d.badges=(d.badges||[]).filter(b=>BADGES.some(x=>x[0]===b))}
    else{const o1=JSON.parse(localStorage.getItem('andy_game_progress')||'{}')||{};if(o1.grade)d.grade=o1.grade;if(o1.stars)d.coins=d.earned=Number(o1.stars)||0;if(o1.sound===false)d.sound=false}}catch(e){}}
- const p=Object.assign(fresh(),d||{});p.grade=Number(p.grade);if(!GRADES.includes(p.grade))p.grade=4;if(!p.owned.includes('star'))p.owned.push('star');return p}
+ const p=Object.assign(fresh(),d||{});p.grade=Number(p.grade);if(!GRADES.includes(p.grade))p.grade=4;if(!p.owned.includes('star'))p.owned.push('star');p.days=p.days||{};p.topics=p.topics||{};return p}
 let P=load();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}}
 const level=()=>Math.floor(P.xp/XP_LEVEL)+1;
@@ -315,7 +358,7 @@ let toastTimer;
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const shuffle=a=>{const o=a.slice();for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]]}return o};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const worldsFor=g=>['math','science','history','space'].concat(g===4?['california']:[]);
+const worldsFor=g=>['math','science','history','english','space'].concat(g===4?['california']:[]);
 const qkey=(g,w,t)=>g+'|'+w+'|'+t;
 const bestOf=(g,w,s)=>P.best[g+'-'+w+'-'+s]||0;
 const unlocked=(g,w,s)=>s===0||bestOf(g,w,s-1)>0;
@@ -395,12 +438,18 @@ function map(){const w=WORLDS[S.world],g=P.grade;let firstOpen=[0,1,2].find(s=>u
   <p class="vi"><b>Ba mẹ:</b> Mỗi thế giới có 3 màn: 2 quái nhỏ (đúng 4 câu để thắng) và 1 boss (đúng 6 câu). Thắng màn trước mới mở màn sau. Sai 3 câu thì chơi lại; cuối trận con được ôn lại các câu sai kèm giải thích tiếng Việt.</p></div></div>`}
 
 /* ---------- battle ---------- */
-function normalize(raw,g,w){const correct=String(raw[1][raw[2]]);
- return{text:String(raw[0]),key:qkey(g,w,raw[0]),correct,en:String(raw[3]||''),vi:String(raw[4]||''),hint:String(raw[5]||''),
+function normalize(raw,g,w){const correct=String(raw[1][raw[2]]),m=raw[6];
+ const key=m&&typeof m==='object'?qkey(g,w,m.key):qkey(g,w,raw[0]),topic=m?String(typeof m==='object'?m.topic:m):'';
+ return{text:String(raw[0]),key,topic,correct,en:String(raw[3]||''),vi:String(raw[4]||''),hint:String(raw[5]||''),
   options:shuffle(raw[1].map((v,i)=>({v:String(v),ok:i===raw[2]}))),removed:false}}
-function buildRound(n){const g=P.grade,w=S.world,list=(bank[String(g)]||{})[w]||[];
+const GEN={math:window.ANDY_GEN_MATH,english:window.ANDY_GEN_ENGLISH};
+function genWeight(g,w){return t=>{const st=P.stats[qkey(g,w,'gen:'+t)];return st&&st.w>st.c?3:st&&st.w>0?1:0}}
+function buildRound(n){const g=P.grade,w=S.world,list=(bank[String(g)]||{})[w]||[],gen=GEN[w];
+ const nGen=gen?Math.min(n,Math.max(Math.ceil(n*(w==='math'?.6:.5)),n-list.length)):0;
  const scored=list.map(raw=>{const st=P.stats[qkey(g,w,raw[0])]||{c:0,w:0};const tier=st.w>st.c?0:(st.c+st.w===0?1:2+st.c*.1);return{raw,s:tier+Math.random()*.95}});
- scored.sort((a,b)=>a.s-b.s);return shuffle(scored.slice(0,n)).map(x=>normalize(x.raw,g,w))}
+ scored.sort((a,b)=>a.s-b.s);const raws=scored.slice(0,n-nGen).map(x=>x.raw);
+ if(nGen){const seen=new Set(raws.map(r=>r[0]));let tries=0;while(raws.length<n&&tries++<8){gen.generate(g,n,genWeight(g,w)).forEach(r=>{if(raws.length<n&&!seen.has(r[0])){seen.add(r[0]);raws.push(r)}})}}
+ return shuffle(raws).map(r=>normalize(r,g,w))}
 function enemy(){return WORLDS[S.world].stages[S.stage]}
 function begin(stage){if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPaywall();return}if(stage!==undefined)S.stage=stage;const e=enemy();
  let hearts=HEARTS;if(S.usePotion&&P.potions>0){P.potions--;hearts++;save()}S.usePotion=false;
@@ -424,7 +473,7 @@ function paintArena(){const h=$('#hearts');if(!h)return;
  $('#track').innerHTML=S.round.map((_,i)=>`<i class="${S.results[i]===true?'ok':S.results[i]===false?'no':i===S.qi?'now':''}"></i>`).join('');
  const cn=$('#coins');if(cn)cn.textContent='⭐ '+P.coins}
 function challengeHTML(){const q=S.round[S.qi];
- return `<div class="eyebrow">✦ QUESTION ${S.qi+1} · ${esc(WORLDS[S.world].name.toUpperCase())} ✦</div>
+ return `<div class="eyebrow">✦ QUESTION ${S.qi+1} · ${esc(WORLDS[S.world].name.toUpperCase())} ✦${q.topic?`<span class="topic">📘 ${esc(q.topic)}</span>`:''}</div>
  <div class="question" id="qtext">${esc(q.text)}</div>
  <div class="speed" aria-hidden="true"><i></i></div>
  <div class="answers">${q.options.map((o,i)=>`<button class="answer" data-answer="${i}" aria-label="Answer ${i+1}: ${esc(o.v)}"><span class="k" aria-hidden="true">${i+1}</span>${esc(o.v)}</button>`).join('')}</div>
@@ -446,7 +495,7 @@ function shoot(fromEl,toEl,emoji,onHit){const arena=$('#arena');if(!arena||reduc
 function knock(el){if(!el||reduce)return;el.animate([{transform:'translateX(0)',filter:'brightness(1)'},{transform:'translateX(9px)',filter:'brightness(2.2)'},{transform:'translateX(-7px)'},{transform:'translateX(0)',filter:'brightness(1)'}],{duration:380})}
 function answer(i){if(S.answered||S.page!=='battle')return;const q=S.round[S.qi],o=q.options[i];if(!o||o.gone)return;
  S.answered=true;const ms=performance.now()-S.t0,ok=o.ok,e=enemy();
- const st=P.stats[q.key]||(P.stats[q.key]={c:0,w:0});ok?st.c++:st.w++;S.results[S.qi]=ok;
+ const st=P.stats[q.key]||(P.stats[q.key]={c:0,w:0});ok?st.c++:st.w++;S.results[S.qi]=ok;logAnswer(q,ok,ms);
  const btns=[...app.querySelectorAll('.answer')];
  btns.forEach((b,j)=>{b.disabled=true;if(q.options[j].ok){b.classList.add('correct');b.insertAdjacentHTML('beforeend',' ✔')}else if(j===i)b.classList.add('wrong');else b.classList.add('dim')});
  $('.speed')?.classList.add('stop');
@@ -458,11 +507,11 @@ function answer(i){if(S.answered||S.page!=='battle')return;const q=S.round[S.qi]
   const c=1+(fast?1:0)+(S.combo>=3?1:0),x=10+(fast?5:0)+(S.combo>=3?5:0);P.coins+=c;P.earned+=c;P.xp+=x;S.coinsWon+=c;S.xpWon+=x;
   gains=[`+${c} ⭐`,`+${x} XP`];if(fast)gains.push('⚡ Fast!');if(S.combo>=3)gains.push(`🔥 Combo x${S.combo}`);if(crit)gains.push('💥 Critical!');
   sfx.good(S.combo);try{const H=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics;H&&H.impact({style:'LIGHT'})}catch(e){}
-  shoot($('#andy'),$('#boss'),crit?'💥':skinEmoji(),()=>{crit?sfx.crit():sfx.hit();knock($('#boss'));floatText($('#boss'),crit?'CRIT -2':'-1',crit?'#ffe066':null,crit);paintArena();$('#coins')?.classList.add('bump');setTimeout(()=>$('#coins')?.classList.remove('bump'),450);
+  animClass($('#andy'),'lunge',450);shoot($('#andy'),$('#boss'),crit?'💥':skinEmoji(),()=>{crit?sfx.crit():sfx.hit();knock($('#boss'));floatText($('#boss'),crit?'CRIT -2':'-1',crit?'#ffe066':null,crit);paintArena();$('#coins')?.classList.add('bump');setTimeout(()=>$('#coins')?.classList.remove('bump'),450);
    if(becameAngry){setTimeout(()=>{sfx.roar();bannerText('😡 BOSS IS ANGRY!');buzz(200)},350)}});
   $('#robo').textContent=S.hp<=0?`${e.name} is defeated!`:becameAngry?'Careful! The boss is angry now!':crit?'CRITICAL HIT! Amazing!':pick(PRAISE);
  }else{S.combo=0;S.hearts--;S.missed.push(q);sfx.bad();buzz(120);
-  shoot($('#boss'),$('#andy'),'💥',()=>{knock($('#andy'));$('#arena')?.classList.add('shake');setTimeout(()=>$('#arena')?.classList.remove('shake'),450);floatText($('#andy'),'-❤️','#ffd0da');paintArena()});
+  shoot($('#boss'),$('#andy'),'💥',()=>{animClass($('#andy'),'hurt',500);$('#arena')?.classList.add('shake');setTimeout(()=>$('#arena')?.classList.remove('shake'),450);floatText($('#andy'),'-❤️','#ffd0da');paintArena()});
   $('#robo').textContent=S.hearts<=0?'Out of hearts… let’s review!':pick(CHEER)}
  save();
  $('#fbslot').innerHTML=`<div class="feedback ${ok?'':'bad'}" aria-live="polite"><h3>${ok?'🌟 Correct!':'💡 Let’s learn it!'}</h3>
@@ -473,6 +522,12 @@ function answer(i){if(S.answered||S.page!=='battle')return;const q=S.round[S.qi]
   <div class="tools"><button class="tool" data-a="say-en">🔊 Listen (English)</button><button class="tool" data-a="say-vi">🔊 Nghe tiếng Việt</button></div></div>`;
  setTimeout(()=>{const n=$('.next');if(n){n.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'});n.focus({preventScroll:true})}},500);
  if(S.hp<=0)setTimeout(()=>{if(!reduce)$('#boss')?.animate([{transform:'scale(1)'},{transform:'scale(1.3) rotate(-25deg)'},{transform:'scale(.85) rotate(-20deg)'}],{duration:600})},500)}
+function animClass(el,c,ms){if(!el||reduce)return;el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),ms)}
+function dayKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function logAnswer(q,ok,ms){const k=today(),d=P.days[k]||(P.days[k]={sec:0,c:0,w:0,s:{}});
+ d.sec+=Math.round(Math.min(ms,90000)/1000);ok?d.c++:d.w++;const s=d.s[S.world]||(d.s[S.world]={c:0,w:0});ok?s.c++:s.w++;
+ if(q.topic){const t=P.topics[q.topic]||(P.topics[q.topic]={c:0,w:0,world:S.world,g:P.grade});ok?t.c++:t.w++;t.last=k}
+ const keys=Object.keys(P.days).sort();while(keys.length>70)delete P.days[keys.shift()]}
 function next(){if(!S.answered||S.page!=='battle')return;hush();
  if(S.hp<=0)return finish(true);if(S.hearts<=0)return finish(false);
  S.qi++;if(S.qi>=S.round.length)return finish(false);
@@ -493,7 +548,7 @@ function finish(win){musicStop();S.win=win;const lost=S.startHearts-S.hearts;S.s
  if(win){const bonus=S.stars*2+(e.boss?5:0);P.coins+=bonus;P.earned+=bonus;S.coinsWon+=bonus;const bx=e.boss?50:25;P.xp+=bx;S.xpWon+=bx;
   if(S.stars>(P.best[k]||0))P.best[k]=S.stars;
   const base=S.world==='california'?'history':S.world;if(!P.worldsWon.includes(base))P.worldsWon.push(base);
-  if(e.boss&&S.world!=='california'&&!P.bossWins.includes(S.world))P.bossWins.push(S.world)}
+  if(e.boss&&S.world!=='california'&&!P.bossWins.includes(S.world))P.bossWins.push(S.world);if(e.boss&&S.world==='english')earn('bookworm')}
  if(win)earn('first');if(win&&S.stars===3)earn('perfect');if(S.maxCombo>=5)earn('combo5');if(S.fast>=5)earn('speed');if(S.crits>0)earn('crit');
  if(win&&S.hearts===1)earn('brave');if(['math','science','history','space'].every(w=>P.worldsWon.includes(w)))earn('explorer');
  if(['math','science','history','space'].every(w=>P.bossWins.includes(w)))earn('bossall');generalBadges();
@@ -503,7 +558,7 @@ function finish(win){musicStop();S.win=win;const lost=S.startHearts-S.hearts;S.s
  if(level()>S.startLevel)setTimeout(sfx.level,1800)}
 function result(){const w=WORLDS[S.world],e=enemy(),lvUp=level()>S.startLevel;const hasNext=S.win&&S.stage<2;
  return `<div class="screen ${S.world}"><div class="scene-bg" style="background-image:url('assets/${w.scene}')"></div>${header(true)}
- <div class="done"><div class="big">${S.win?(e.boss?'👑':'🏆'):e.emoji}</div>
+ <div class="done"><div class="andy-result ${S.win?'win':'lose'}"><img src="assets/${w.pic}" alt="Andy"></div><div class="big">${S.win?(e.boss?'👑':'🏆'):e.emoji}</div>
  <h2>${S.win?(e.boss?'Boss defeated!':'Victory!'):(e.boss?'The boss escaped!':'It got away!')}</h2>
  <p>${S.win?`Andy & Robo beat <b>${esc(e.name)}</b>!${hasNext?' A new stage is open!':e.boss?` You saved ${esc(w.name)}!`:''}`:`${esc(e.name)} ran away… but you learned ${S.missed.length} new things. Try again!`}</p>
  <div class="bigstars" aria-label="${S.stars} of 3 stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
@@ -554,6 +609,7 @@ function parents(){const g=P.grade,ws=worldsFor(g);
   const raw=((bank[kg]||{})[kw]||[]).find(r=>r[0]===text);if(raw)tricky.push({v,q:normalize(raw,kg,kw)})});
  tricky.sort((a,b)=>(b.v.w-b.v.c)-(a.v.w-a.v.c));
  return `<div class="screen">${header(true)}
+ ${weeklyHTML()}
  <div class="panel"><h2>👪 Góc Ba Mẹ · Lớp ${g}</h2><p>Kết quả lưu trên máy này. Đổi lớp ở màn hình chính để xem lớp khác.</p>
  <div style="overflow-x:auto"><table class="ptable"><thead><tr><th>THẾ GIỚI</th><th>ĐÚNG</th><th>SỐ CÂU</th><th>MÀN</th></tr></thead><tbody>${rows}</tbody></table></div>
  <p style="margin-top:12px">Level ${level()} (${title()}) · Tổng ${P.earned} ⭐ đã kiếm · ${P.badges.length}/${BADGES.length} huy hiệu · Chuỗi ${P.daily.streak} ngày</p></div>
@@ -561,6 +617,34 @@ function parents(){const g=P.grade,ws=worldsFor(g);
  ${window.AndyAccess?AndyAccess.parentHTML():''}
  <div class="panel"><h2>⚙️ Cài đặt</h2><p>Xóa toàn bộ sao, level, huy hiệu, đồ đã mua và thống kê trên máy này.</p>
  <button class="ghost ${S.resetArm?'danger':''}" data-a="reset">${S.resetArm?'⚠️ Chạm lần nữa để xóa hẳn':'🗑️ Xóa tiến trình'}</button></div></div>`}
+
+/* ---------- weekly report (Vietnamese) ---------- */
+const VI_DAY=['CN','T2','T3','T4','T5','T6','T7'];
+const VI_WORLD={math:'Toán',science:'Khoa học',history:'Lịch sử',english:'Tiếng Anh',space:'Vũ trụ',california:'California'};
+const ADVICE={math:'Cùng con làm lại 3–4 bài giống vậy trên giấy, nói to từng bước.',science:'Tìm một video ngắn hoặc thí nghiệm nhỏ ở nhà về chủ đề này.',history:'Hỏi con kể lại sự kiện như một câu chuyện: ai, ở đâu, khi nào, vì sao.',english:'Đọc to câu đúng cùng con và đặt thêm 2 câu mới với từ đó.',space:'Cùng con xem hình hành tinh/bầu trời và nói lại điều vừa học.',california:'Mở bản đồ California và chỉ cho con nơi xảy ra sự kiện.'};
+function weekStats(offset){const out={days:[],sec:0,c:0,w:0,s:{},active:0};for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i-offset*7);const k=dayKey(d),v=P.days[k]||{sec:0,c:0,w:0,s:{}};
+ out.days.push({k,label:VI_DAY[d.getDay()],sec:v.sec,n:v.c+v.w});out.sec+=v.sec;out.c+=v.c;out.w+=v.w;if(v.c+v.w)out.active++;
+ Object.entries(v.s||{}).forEach(([w,x])=>{const o=out.s[w]||(out.s[w]={c:0,w:0});o.c+=x.c;o.w+=x.w})}return out}
+function weekText(){const a=weekStats(0),n=a.c+a.w,pct=n?Math.round(a.c/n*100):0,mins=Math.round(a.sec/60);
+ const subj=Object.entries(a.s).map(([w,x])=>`${VI_WORLD[w]||w}: ${Math.round(x.c/(x.c+x.w)*100)}% (${x.c+x.w} câu)`).join('; ');
+ return `Báo cáo tuần của Andy's Worlds — lớp ${P.grade}\nThời gian học: ${mins} phút trong ${a.active}/7 ngày\nSố câu: ${n} · Đúng: ${pct}%\n${subj?'Theo môn: '+subj+'\n':''}${weakTopics().slice(0,3).map(t=>'Cần ôn: '+t.name+' ('+t.pct+'% đúng)').join('\n')}`}
+function weakTopics(){const since=new Date();since.setDate(since.getDate()-13);const sk=dayKey(since);
+ return Object.entries(P.topics).filter(([,t])=>t.g===P.grade&&(t.last||'')>=sk&&t.c+t.w>=2).map(([name,t])=>({name,world:t.world,n:t.c+t.w,pct:Math.round(t.c/(t.c+t.w)*100)})).filter(t=>t.pct<75).sort((a,b)=>a.pct-b.pct||b.n-a.n)}
+function weeklyHTML(){const a=weekStats(0),b=weekStats(1),n=a.c+a.w,pct=n?Math.round(a.c/n*100):0,mins=Math.round(a.sec/60),bm=Math.round(b.sec/60),bn=b.c+b.w,bp=bn?Math.round(b.c/bn*100):0;
+ const max=Math.max(60,...a.days.map(d=>d.sec)),tk=today();
+ const trend=bn?(pct>bp?`📈 Tỉ lệ đúng tăng ${pct-bp}% so với tuần trước.`:pct<bp?`📉 Tỉ lệ đúng giảm ${bp-pct}% so với tuần trước.`:'➡️ Tỉ lệ đúng giữ nguyên so với tuần trước.'):'';
+ const subj=Object.entries(a.s).sort((x,y)=>(y[1].c+y[1].w)-(x[1].c+x[1].w)).map(([w,x])=>{const t=x.c+x.w,p=Math.round(x.c/t*100);return `<tr><td>${(WORLDS[w]||{}).icon||''} ${VI_WORLD[w]||w}</td><td><span class="meter"><i style="width:${p}%"></i></span>${p}%</td><td>${t}</td></tr>`}).join('');
+ const weak=weakTopics().slice(0,4);
+ let praise;if(!n)praise='Tuần này con chưa chơi. Mỗi ngày 10–15 phút là đủ để con tiến bộ!';else if(a.active>=5)praise='🌟 Con rất chăm chỉ: học '+a.active+' ngày trong tuần!';else if(pct>=80)praise='🌟 Con trả lời rất chính xác. Hãy khen con nhé!';else praise='👍 Con đang cố gắng. Thử chơi đều đặn mỗi ngày để giữ chuỗi.';
+ return `<div class="panel"><h2>📅 Báo cáo tuần cho Ba Mẹ</h2><p style="font-size:13px">7 ngày gần nhất (${a.days[0].k.slice(5).split('-').reverse().join('/')} – ${a.days[6].k.slice(5).split('-').reverse().join('/')})</p>
+ <div class="kpis"><div><b>${mins}</b><small>phút học${bn||bm?` (tuần trước ${bm})`:''}</small></div><div><b>${n}</b><small>câu đã làm${bn?` (tuần trước ${bn})`:''}</small></div><div><b>${n?pct+'%':'—'}</b><small>trả lời đúng</small></div><div><b>${a.active}/7</b><small>ngày có học · chuỗi ${P.daily.streak} ngày</small></div></div>
+ <div class="week" aria-label="Số phút học mỗi ngày">${a.days.map(d=>`<div class="${d.k===tk?'today':''}"><small>${d.sec?Math.max(1,Math.round(d.sec/60))+'′':''}</small><i style="height:${Math.round(d.sec/max*80)}%"></i>${d.label}</div>`).join('')}</div>
+ <p>${praise}${trend?'<br>'+trend:''}</p>
+ ${subj?`<div style="overflow-x:auto"><table class="ptable"><thead><tr><th>MÔN</th><th>ĐÚNG</th><th>SỐ CÂU</th></tr></thead><tbody>${subj}</tbody></table></div>`:''}
+ <h3 style="margin:14px 0 4px">🎯 Cần ôn thêm</h3>${weak.length?weak.map(t=>`<div class="weak"><b>${esc(t.name)}</b> · ${VI_WORLD[t.world]||''} · đúng ${t.pct}% (${t.n} câu)<br><small>💡 ${ADVICE[t.world]||ADVICE.math}</small></div>`).join(''):`<p style="font-size:13px">${n?'Chưa có chủ đề nào yếu. Tuyệt vời!':'Khi con chơi, các chủ đề (theo chuẩn California) con hay sai sẽ hiện ở đây.'}</p>`}
+ ${n?'<button class="ghost full" data-a="share-report">📤 Gửi báo cáo (tin nhắn / email)</button>':''}</div>`}
+async function shareReport(){const t=weekText();try{if(navigator.share){await navigator.share({title:"Báo cáo tuần Andy's Worlds",text:t});return}}catch(e){if(e&&e.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(t);toast('Đã sao chép báo cáo ✓')}catch(e){toast('Không chia sẻ được')}}
 
 /* ---------- confetti ---------- */
 function confetti(){if(reduce)return;const cv=$('#confetti'),ctx=cv.getContext('2d');if(!ctx)return;const W=cv.width=innerWidth,H=cv.height=innerHeight;
@@ -593,6 +677,7 @@ app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dis
   case 'say-en':speak(S.round[S.qi].en);break;
   case 'say-vi':speak(S.round[S.qi].vi,'vi-VN');break;
   case 'parents':go('parents');break;
+  case 'share-report':shareReport();break;
   case 'paywall':window.AndyAccess&&AndyAccess.showPaywall();break;
   case 'iap-restore':window.AndyAccess&&AndyAccess.restore();break;
   case 'shop':go('shop');break;
