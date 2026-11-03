@@ -515,7 +515,7 @@ const giftReady=()=>P.daily.last!==today();
 const skinEmoji=()=>(SKINS.find(s=>s[0]===P.skin)||SKINS[0])[1];
 
 /* ---------- session ---------- */
-const S={page:'home',world:'math',stage:0,round:[],qi:0,hp:4,maxHp:4,hearts:HEARTS,startHearts:HEARTS,combo:0,maxCombo:0,fast:0,crits:0,missed:[],results:[],answered:false,hint:false,t0:0,coinsWon:0,xpWon:0,startLevel:1,newBadges:[],win:false,stars:0,angry:false,usePotion:false,chestOpened:false,resetArm:false};
+const S={game:'balloon',page:'home',world:'math',stage:0,round:[],qi:0,hp:4,maxHp:4,hearts:HEARTS,startHearts:HEARTS,combo:0,maxCombo:0,fast:0,crits:0,missed:[],results:[],answered:false,hint:false,t0:0,coinsWon:0,xpWon:0,startLevel:1,newBadges:[],win:false,stars:0,angry:false,usePotion:false,chestOpened:false,resetArm:false};
 let toastTimer;
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const shuffle=a=>{const o=a.slice();for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]]}return o};
@@ -946,7 +946,7 @@ function netData(m){if(!m||typeof m!=='object')return;const N=NET;
   case 'hello':N.opp={name:String(m.name||'Friend').slice(0,12),emoji:DUEL_AV.includes(m.emoji)?m.emoji:'🙂',grade:GRADES.includes(Number(m.grade))?Number(m.grade):4};netShow();break;
   case 'full':netFail({type:'full'});break;
   case 'bye':netFail({type:'lost'});break;
-  case 'start':if(N.role==='guest'&&N.opp){N.subj=DUEL_SUBJ.some(s=>s[0]===m.subj)?m.subj:'mix';duelStart(N)}break;
+  case 'start':if(N.role==='guest'&&N.opp){N.subj=DUEL_SUBJ.some(s=>s[0]===m.subj)?m.subj:'mix';duelStart(N);if(S.page!=='duel'){netSend({t:'bye'});netClose();go('online')}}break;
   case 'again':if(N.role==='host'&&S.page!=='duel')netStartHost();break;
   case 'ans':if(N.role==='host'&&D&&D.net&&D.go&&!D.over)duelPull(1,m.pull===2?2:1);break;
   case 'pos':if(N.role==='guest'&&D&&D.net&&!D.over){D.pos=Math.max(-DUEL_WIN,Math.min(DUEL_WIN,Number(m.pos)||0));duelRope()}break;
@@ -1092,7 +1092,7 @@ function gspeed(){if(!GM)return gintro();return `<div class="gscreen g-speed"><d
  <div class="sbar"><i id="sbar"></i></div><div class="sq" id="sq"></div></div>`}
 function speedNext(){GM.q=gpool();GM.lock=false;GM.t0=performance.now();const q=GM.q,el=$('#sq');if(!el)return;
  el.innerHTML=`<div class="sqq">${esc(q.text)}</div><div class="answers">${q.options.map((o,i)=>`<button class="answer" data-gt="${i}" aria-label="Answer ${i+1}: ${esc(o.v)}"><span class="k" aria-hidden="true">${i+1}</span>${esc(o.v)}</button>`).join('')}</div>`}
-function speedClock(){const left=Math.max(0,GM.end-Date.now()),s=Math.ceil(left/1000),c=$('#sclock');if(c){c.textContent='⏱ '+s;c.classList.toggle('low',s<=10)}
+function speedClock(){if(GM.pausedLeft!=null)return;const left=Math.max(0,GM.end-Date.now()),s=Math.ceil(left/1000),c=$('#sclock');if(c){c.textContent='⏱ '+s;c.classList.toggle('low',s<=10)}
  const b=$('#sbar');if(b)b.style.width=Math.min(100,left/600)+'%';if(s<=10&&s>0&&s!==GM.lastSec){GM.lastSec=s;tone(880,.05,'square',0,.03)}
  if(left<=0){clearInterval(GM.iv);GM.lock=true;speedEnd()}}
 function speedTap(i){if(!GM||GM.lock||!GM.q)return;i=Number(i);const q=GM.q,o=q.options[i];if(!o)return;GM.lock=true;recordQ(q,o.ok,performance.now()-GM.t0);
@@ -1126,7 +1126,7 @@ function rnHost(){if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPa
   peer.on('disconnected',()=>{if(RN===N)try{peer.reconnect()}catch(e){}});
   peer.on('error',e=>{if(RN!==N)return;if(e.type==='unavailable-id'){rnHost();return}if(N.status==='starting')rnFail(e.type)})})}
 function rnHostData(g,m){if(!m||typeof m!=='object')return;const N=RN;
- if(m.t==='hello'){if(!g.info&&!N.racing&&rnPlayers(N).length<4){g.info=rnClean([m])[0];sfx.coin();rnLobbySync()}}
+ if(m.t==='hello'){if(!g.info&&rnPlayers(N).length<4){g.info=rnClean([m])[0];if(!N.racing){sfx.coin();rnLobbySync()}}}
  else if(m.t==='ans'){if(RC&&RC.go&&!RC.over&&g.idx!=null)rcAdv(g.idx)}
  else if(m.t==='st'){if(RC&&!RC.over&&g.idx!=null){RC.fz[g.idx]=!!m.fz;rcSync()}}}
 function rnGuestLeft(g){const N=RN;N.guests=N.guests.filter(x=>x!==g);try{g.c.close()}catch(e){}if(g.info)toast(`${g.info.name} left`);
@@ -1200,7 +1200,7 @@ function rcApply(m){const n=RC.n;if(Array.isArray(m.p))RC.p=Array.from({length:n
 function rcDraw(){RC.players.forEach((p,i)=>{const r=$('#rk'+i);if(!r)return;r.style.bottom=(RC.p[i]/RGOAL*70)+'%';r.classList.toggle('fz',!!RC.fz[i]);r.classList.toggle('gone',!!RC.gone[i])})}
 function rcEnd(rank){if(!RC||RC.over)return;rcStop();musicStop();
  if(!Array.isArray(rank)||rank.length!==RC.n||new Set(rank).size!==RC.n||rank.some(x=>!(x>=0&&x<RC.n)))rank=RC.players.map((_,i)=>i).sort((a,b)=>RC.p[b]-RC.p[a]);
- RC.rank=rank;if(RN&&RN.role==='host')RN.racing=false;const won=rank[0]===RC.me;
+ RC.rank=rank;if(RN&&RN.role==='host'){RN.racing=false;rnLobbySync()}const won=rank[0]===RC.me;
  RC.coins=won?5:2;P.coins+=RC.coins;P.earned+=RC.coins;P.xp+=won?40:20;S.newBadges=[];if(won)earn('rocket');generalBadges();save();
  if(won){sfx.win();confetti()}else sfx.lose();
  const f=$('#rfz');if(f){f.innerHTML=`<b>${won?'🏆 You reached the Moon first!':'🌕 '+esc(RC.players[rank[0]].name)+' wins!'}</b>`;f.hidden=false}
@@ -1293,7 +1293,8 @@ document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey)return
  if(S.page==='battle'){if(!S.answered&&/^[1-4]$/.test(e.key)){e.preventDefault();answer(Number(e.key)-1)}
   else if(S.answered&&(e.key==='Enter'||e.key===' ')&&!(document.activeElement&&document.activeElement.matches('.tool'))){e.preventDefault();next()}
   else if(!S.answered&&(e.key==='h'||e.key==='H'))toggleHint()}});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)musicStop();else if(S.page==='battle'||(S.page==='duel'&&D&&D.go&&!D.over)||(['gballoon','gspeed'].includes(S.page)&&GM)||(S.page==='rrace'&&RC&&RC.go&&!RC.over))musicStart()});
+document.addEventListener('visibilitychange',()=>{if(GM&&GM.type==='speed'&&GM.end){if(document.hidden){GM.pausedLeft=Math.max(0,GM.end-Date.now())}else if(GM.pausedLeft!=null){GM.end=Date.now()+GM.pausedLeft;GM.pausedLeft=null}}
+ if(document.hidden)musicStop();else if(S.page==='battle'||(S.page==='duel'&&D&&D.go&&!D.over)||(['gballoon','gspeed'].includes(S.page)&&GM)||(S.page==='rrace'&&RC&&RC.go&&!RC.over))musicStart()});
 render();
 })();
 </script>
