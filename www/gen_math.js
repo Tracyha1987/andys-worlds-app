@@ -276,6 +276,91 @@
         'Tỉ số đồng dạng = ' + a * k + ' : ' + a + ' = ' + k + ', nên ' + b + ' × ' + k + ' = ' + b * k + ' cm.', 'Tìm tỉ số đồng dạng trước.'); }
   ];
 
+  /* ---------- Extra generators so every grade 4–8 covers all 4 domains ---------- */
+  G[4].push(
+    function angle() { var d = pick([R(15, 85), 90, R(95, 175), 180]), t = d < 90 ? 'Acute' : d === 90 ? 'Right' : d < 180 ? 'Obtuse' : 'Straight';
+      var vi = { Acute: 'nhọn', Right: 'vuông', Obtuse: 'tù', Straight: 'bẹt' };
+      return item('angle', '4.G.2 · Classify angles', 'An angle measures ' + d + '°. What kind of angle is it?', t, ['Acute', 'Right', 'Obtuse', 'Straight'].filter(function (x) { return x !== t; }), function () { return 'Reflex'; },
+        'Acute < 90°, right = 90°, obtuse is between 90° and 180°, straight = 180°. So ' + d + '° is ' + t.toLowerCase() + '.',
+        'Góc nhọn < 90°, góc vuông = 90°, góc tù từ 90° đến 180°, góc bẹt = 180°. Vậy ' + d + '° là góc ' + vi[t] + '.', 'So sánh với 90° (góc vuông).'); },
+    function symmetry() { var n = pick([3, 4, 5, 6, 8]), nm = { 3: 'an equilateral triangle', 4: 'a square', 5: 'a regular pentagon', 6: 'a regular hexagon', 8: 'a regular octagon' }[n];
+      return item('symmetry', '4.G.3 · Lines of symmetry', 'How many lines of symmetry does ' + nm + ' have?', n, [n - 1, n + 1, n * 2, 2], function () { return R(0, 10); },
+        'A regular shape with ' + n + ' sides has ' + n + ' lines of symmetry.', 'Hình đều có ' + n + ' cạnh thì có ' + n + ' trục đối xứng.', 'Gấp hình lại sao cho hai nửa trùng khít.'); },
+    function convert4() { var c = pick([['feet', 'inches', 12, 'feet', 'inch'], ['yards', 'feet', 3, 'yard', 'feet'], ['meters', 'centimeters', 100, 'mét', 'xăng-ti-mét'], ['kilograms', 'grams', 1000, 'ki-lô-gam', 'gam'], ['hours', 'minutes', 60, 'giờ', 'phút'], ['pounds', 'ounces', 16, 'pound', 'ounce']]), n = R(2, 9), v = n * c[2];
+      return item('convert4', '4.MD.1 · Convert measurements', n + ' ' + c[0] + ' = how many ' + c[1] + '?', fmt(v), [fmt(n + c[2]), fmt(v / 10 || v + 1), fmt(v + c[2])], function () { return fmt(v + R(1, 20)); },
+        '1 ' + c[0].replace(/s$/, '') + ' = ' + c[2] + ' ' + c[1] + ', so ' + n + ' × ' + c[2] + ' = ' + fmt(v) + '.', n + ' × ' + c[2] + ' = ' + fmt(v) + ' (vì 1 đơn vị lớn = ' + c[2] + ' đơn vị nhỏ).', 'Đổi từ đơn vị lớn sang nhỏ thì nhân.'); }
+  );
+  G[4].push(
+    function pattern4() { var a = R(2, 20), d = R(3, 12), seq = [a, a + d, a + 2 * d, a + 3 * d], ans = a + 4 * d;
+      return item('pattern4', '4.OA.5 · Number patterns', 'What comes next? ' + seq.join(', ') + ', …', ans, [ans + d, ans - 1, a + 4 * d + 2], function () { return ans + R(-9, 9); },
+        'The rule is "add ' + d + '". ' + seq[3] + ' + ' + d + ' = ' + ans + '.', 'Quy luật là "cộng thêm ' + d + '". ' + seq[3] + ' + ' + d + ' = ' + ans + '.', 'Lấy số sau trừ số trước để tìm quy luật.'); },
+    function times4() { var a = R(3, 12), k = R(2, 9);
+      return item('times4', '4.OA.2 · Multiplicative comparison', 'Mia has ' + a + ' stickers. Leo has ' + k + ' times as many. How many stickers does Leo have?', a * k, [a + k, a * k + a, a * (k - 1) || a + 1], function () { return a * k + R(-8, 8); },
+        '"' + k + ' times as many" means multiply: ' + a + ' × ' + k + ' = ' + a * k + '.', '"Gấp ' + k + ' lần" nghĩa là nhân: ' + a + ' × ' + k + ' = ' + a * k + '.', '"Times as many" = phép nhân.'); }
+  );
+  G[5].push(
+    function expr5() { var a = R(2, 9), b = R(2, 9), c = R(2, 5);
+      return item('expr5', '5.OA.2 · Write expressions', 'Which expression means "add ' + a + ' and ' + b + ', then multiply by ' + c + '"?', '(' + a + ' + ' + b + ') × ' + c, [a + ' + ' + b + ' × ' + c, a + ' × ' + c + ' + ' + b, '(' + a + ' × ' + b + ') + ' + c], function () { return a + ' + (' + b + ' × ' + c + ')'; },
+        'Do the adding first, so it goes in parentheses: (' + a + ' + ' + b + ') × ' + c + ' = ' + (a + b) * c + '.', 'Phép cộng làm trước nên đặt trong ngoặc: (' + a + ' + ' + b + ') × ' + c + ' = ' + (a + b) * c + '.', 'Phần làm trước phải nằm trong ngoặc.'); }
+  );
+  G[5].push(
+    function coord() { var x = R(0, 7), y = R(0, 7), dx = R(1, 4), dy = R(1, 4);
+      return item('coord', '5.G.1 · Coordinate plane', 'Start at (' + x + ', ' + y + '). Move ' + dx + ' right and ' + dy + ' up. Where are you?', '(' + (x + dx) + ', ' + (y + dy) + ')', ['(' + (x + dy) + ', ' + (y + dx) + ')', '(' + (y + dy) + ', ' + (x + dx) + ')', '(' + (x + dx) + ', ' + Math.abs(y - dy) + ')'], function () { return '(' + R(0, 11) + ', ' + R(0, 11) + ')'; },
+        'Right adds to x, up adds to y: (' + x + ' + ' + dx + ', ' + y + ' + ' + dy + ') = (' + (x + dx) + ', ' + (y + dy) + ').', 'Sang phải thì cộng vào x, lên trên thì cộng vào y: (' + (x + dx) + ', ' + (y + dy) + ').', 'Số thứ nhất là x (ngang), số thứ hai là y (dọc).'); },
+    function quad() { var q = pick([['4 equal sides and 4 right angles', 'Square', 'hình vuông'], ['4 right angles, opposite sides equal, but not all sides equal', 'Rectangle', 'hình chữ nhật'], ['4 equal sides but no right angles', 'Rhombus', 'hình thoi'], ['exactly one pair of parallel sides', 'Trapezoid', 'hình thang'], ['2 pairs of parallel sides and no right angles, sides not all equal', 'Parallelogram', 'hình bình hành']]);
+      return item('quad', '5.G.4 · Classify quadrilaterals', 'Which shape has ' + q[0] + '?', q[1], ['Square', 'Rectangle', 'Rhombus', 'Trapezoid', 'Parallelogram'].filter(function (x) { return x !== q[1]; }), function () { return 'Kite'; },
+        'A shape with ' + q[0] + ' is a ' + q[1].toLowerCase() + '.', 'Hình có đặc điểm này là ' + q[2] + '.', 'Đếm cạnh bằng nhau, góc vuông và cạnh song song.'); },
+    function convert5() { var c = pick([['m', 'cm', 100, 'mét', 'xăng-ti-mét'], ['kg', 'g', 1000, 'ki-lô-gam', 'gam'], ['L', 'mL', 1000, 'lít', 'mi-li-lít'], ['km', 'm', 1000, 'ki-lô-mét', 'mét']]), a = R(11, 99) / 10, v = Math.round(a * c[2]);
+      return item('convert5', '5.MD.1 · Convert metric units', dec(a, 1) + ' ' + c[0] + ' = how many ' + c[1] + '?', fmt(v), [fmt(v / 10), fmt(v * 10), fmt(Math.round(a * 10))], function () { return fmt(v + R(1, 50)); },
+        '1 ' + c[0] + ' = ' + fmt(c[2]) + ' ' + c[1] + ', so ' + dec(a, 1) + ' × ' + fmt(c[2]) + ' = ' + fmt(v) + '.', '1 ' + c[3] + ' = ' + fmt(c[2]) + ' ' + c[4] + ', nên ' + vdec(dec(a, 1)) + ' × ' + fmt(c[2]) + ' = ' + fmt(v) + '.', 'Nhân với 10, 100 hay 1000 là dời dấu phẩy sang phải.'); }
+  );
+  G[6].push(
+    function gcf() { var g = R(2, 9), a = g * R(2, 7), b; do { b = g * R(2, 7); } while (b === a || gcd(a, b) !== g);
+      return item('gcf', '6.NS.4 · Greatest common factor', 'What is the greatest common factor of ' + a + ' and ' + b + '?', g, [a * b / g, gcd(a, b) * 2, Math.min(a, b)].filter(function (x) { return x !== g; }), function () { return R(1, 20); },
+        'Both ' + a + ' and ' + b + ' divide by ' + g + ', and no bigger number divides both. GCF = ' + g + '.', a + ' và ' + b + ' đều chia hết cho ' + g + ', không có số nào lớn hơn chia hết cả hai. ƯCLN = ' + g + '.', 'Liệt kê các ước của từng số.'); }
+  );
+  G[7].push(
+    function fracdec() { var p = pick([[1, 4], [3, 4], [1, 8], [3, 8], [5, 8], [7, 8], [1, 5], [2, 5], [3, 5], [1, 20], [7, 20], [9, 25]]), v = p[0] / p[1];
+      return item('fracdec', '7.NS.2d · Fractions as decimals', 'Write ' + p[0] + '/' + p[1] + ' as a decimal.', String(v), [String(p[0] / 10 + p[1] / 100), String(p[1] / p[0] > 9 ? (p[1] / p[0]).toFixed(1) : (p[1] / p[0]).toFixed(2)), String(Math.round(v * 1000) / 100)], function () { return (R(1, 99) / 100).toString(); },
+        p[0] + ' ÷ ' + p[1] + ' = ' + v + '.', p[0] + ' : ' + p[1] + ' = ' + vdec(String(v)) + '.', 'Lấy tử số chia cho mẫu số.'); }
+  );
+  G[8].push(
+    function irr() { var sq = R(2, 12), nonsq; do { nonsq = R(2, 99); } while (Math.sqrt(nonsq) % 1 === 0);
+      return item('irr', '8.NS.1 · Irrational numbers', 'Which number is irrational?', '√' + nonsq, ['√' + sq * sq, R(1, 9) + '/' + R(2, 9), dec(R(1, 99) / 4, 2)], function () { return String(R(1, 50)); },
+        '√' + nonsq + ' is not a perfect square root, so its decimal never ends or repeats. √' + sq * sq + ' = ' + sq + ' is rational.', '√' + nonsq + ' không khai căn tròn được, phần thập phân vô hạn không tuần hoàn nên là số vô tỉ. √' + sq * sq + ' = ' + sq + ' là số hữu tỉ.', 'Số nào không viết được thành phân số?'); },
+    function sqrtest() { var n; do { n = R(5, 150); } while (Math.sqrt(n) % 1 === 0); var lo = Math.floor(Math.sqrt(n));
+      return item('sqrtest', '8.NS.2 · Estimate square roots', '√' + n + ' is between which two whole numbers?', lo + ' and ' + (lo + 1), [(lo - 1) + ' and ' + lo, (lo + 1) + ' and ' + (lo + 2), Math.floor(n / 2) + ' and ' + (Math.floor(n / 2) + 1)], function () { return R(1, 20) + ' and ' + R(21, 30); },
+        lo + '² = ' + lo * lo + ' and ' + (lo + 1) + '² = ' + (lo + 1) * (lo + 1) + '. ' + n + ' is between them, so √' + n + ' is between ' + lo + ' and ' + (lo + 1) + '.', lo + '² = ' + lo * lo + ', ' + (lo + 1) + '² = ' + (lo + 1) * (lo + 1) + '; ' + n + ' nằm giữa nên √' + n + ' nằm giữa ' + lo + ' và ' + (lo + 1) + '.', 'Tìm hai số chính phương gần nhất.'); },
+    function bestfit() { var m = R(2, 9), b = R(10, 60), x = R(2, 9), y = m * x + b;
+      return item('bestfit', '8.SP.3 · Line of best fit', 'A line of best fit is y = ' + m + 'x + ' + b + ', where x is hours studied and y is the test score. Predict the score for ' + x + ' hours.', y, [m * x, m + x + b, y + m], function () { return y + R(-15, 15); },
+        'Substitute x = ' + x + ': ' + m + ' × ' + x + ' + ' + b + ' = ' + y + '.', 'Thay x = ' + x + ': ' + m + ' × ' + x + ' + ' + b + ' = ' + y + '.', 'Thay số giờ vào x.'); }
+  );
+
+  /* ---------- Domains (like school diagnostic reports) ---------- */
+  // N = Number & Operations, ALG = Algebra & Algebraic Thinking, MD = Measurement & Data, GEO = Geometry
+  function domainOf(topic) {
+    var t = String(topic || '');
+    if (/\.G\.|^G-|G-CO|G-SRT|G-GPE|G-GMD/.test(t)) return 'GEO';
+    if (/\.MD\.|\.SP\.|^S-/.test(t)) return 'MD';
+    if (/\.NBT\.|\.NF\.|\.NS\./.test(t)) return 'N';
+    return 'ALG';
+  }
+  var DOMCACHE = {};
+  function fnsFor(grade, dom) {
+    var k = grade + dom; if (DOMCACHE[k]) return DOMCACHE[k];
+    var out = (G[grade] || []).filter(function (f) { try { var it = f(); return domainOf(it[6].topic) === dom; } catch (e) { return false; } });
+    return (DOMCACHE[k] = out);
+  }
+  // n questions for one domain at one grade; each item gets meta.domain and meta.grade
+  function generateDomain(grade, dom, n) {
+    var list = fnsFor(grade, dom), out = [], seen = {}, guard = 0;
+    if (!list.length) return out;
+    while (out.length < n && guard++ < n * 15) {
+      try { var it = pick(list)(); if (it && new Set(it[1]).size === 4 && !seen[it[0]]) { seen[it[0]] = 1; it[6].domain = dom; it[6].grade = grade; out.push(it); } } catch (e) {}
+    }
+    return out;
+  }
+
   function types(grade) { return (G[grade] || G[4]).map(function (f) { return f.name; }); }
   // weights: object {typeName: extraWeight} — favour types the child gets wrong
   function generate(grade, n, weightOf) {
@@ -288,5 +373,5 @@
     }
     return out;
   }
-  window.ANDY_GEN_MATH = { generate: generate, types: types, _G: G };
+  window.ANDY_GEN_MATH = { generate: generate, types: types, generateDomain: generateDomain, domainOf: domainOf, _G: G };
 })();

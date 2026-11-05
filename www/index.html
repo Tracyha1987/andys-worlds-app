@@ -270,6 +270,16 @@ img{display:block;max-width:100%}
 .kpis div{background:#ffffff14;border-radius:14px;padding:8px 10px}
 .kpis b{display:block;font-size:22px}.kpis small{font-size:11px;opacity:.85}
 .weak{margin:8px 0;padding:8px 10px;border-radius:12px;background:#ff5f8620;font-size:13px}
+.pdot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:8px;flex:none}
+.pd-g{background:#2e9e4f}.pd-y{background:#f2b705}.pd-r{background:#e25b4f}.pd-rr{background:repeating-linear-gradient(45deg,#c0392b 0 3px,#e8786d 3px 6px)}.pd-n{background:#c9bfa8}
+.ptab{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}.ptab td{padding:9px 6px;border-top:1px solid #efe2c3;font-weight:700}.ptab tr.ov td{background:#fff3d6;font-size:16px}
+.pkey{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;font-weight:700;color:#6a5a40;margin:6px 0}
+.pselect{width:100%;font:inherit;font-weight:700;padding:8px;border-radius:12px;border:2px solid #e6d3a6;background:#fff;color:#1b2855}
+.ptest .q{font-size:20px;font-weight:800;line-height:1.3;margin:10px 0 12px;text-align:center}
+.ptest .chip{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;background:#1b2855;color:#ffe08a;border-radius:99px;padding:3px 10px}
+.ptest .pbar{height:10px;background:#efe2c3;border-radius:9px;overflow:hidden;margin:8px 0}.ptest .pbar i{display:block;height:100%;background:linear-gradient(90deg,#4fe3a0,#2e9e4f)}
+.ptest .answer.picked{outline:4px solid #2f7ee0}
+.fprog{font-size:13px;font-weight:700;margin:8px 0 2px}
 @keyframes breathe{50%{transform:scale(1.05) translateY(-1%)}}
 @keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.08) translate(-1%,-1%)}}
 @keyframes wiggle-s{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-4deg)}90%{transform:rotate(4deg)}95%{transform:rotate(-2deg)}}
@@ -557,7 +567,7 @@ function speak(text,lang='en-US'){if(!P.sound||!window.speechSynthesis)return;tr
 function hush(){try{speechSynthesis.cancel()}catch(e){}}
 
 /* ---------- shared pieces ---------- */
-function header(back){const lv=level(),pct=P.xp%XP_LEVEL;return `<div class="top">${back?`<button class="iconbtn" aria-label="Back" data-a="${S.page==='battle'||S.page==='result'?'map':'home'}">❮</button>`:''}
+function header(back){const lv=level(),pct=P.xp%XP_LEVEL;return `<div class="top">${back?`<button class="iconbtn" aria-label="Back" data-a="${S.page==='battle'||S.page==='result'?'map':S.page.startsWith('place')?'parents':'home'}">❮</button>`:''}
  <div class="player"><span class="lv">LV ${lv}</span><div class="xp"><small>${title()} Andy · Grade ${P.grade} · ${pct}/${XP_LEVEL} XP</small><div class="bar"><i style="width:${pct}%"></i></div></div></div>
  <span class="coins" id="coins">⭐ ${P.coins}</span><button class="iconbtn" aria-label="${P.sound?'Turn sound off':'Turn sound on'}" data-a="sound">${P.sound?'🔊':'🔇'}</button></div>`}
 const starStr=n=>`<span class="stars3" aria-label="${n} of 3 stars">${[0,1,2].map(i=>i<n?'<b>★</b>':'★').join('')}</span>`;
@@ -605,7 +615,8 @@ function map(){const w=WORLDS[S.world],g=P.grade;let firstOpen=[0,1,2].find(s=>u
 /* ---------- battle ---------- */
 function normalize(raw,g,w){const correct=String(raw[1][raw[2]]),m=raw[6];
  const key=m&&typeof m==='object'?qkey(g,w,m.key):qkey(g,w,raw[0]),topic=m?String(typeof m==='object'?m.topic:m):'';
- return{text:String(raw[0]),key,topic,correct,en:String(raw[3]||''),vi:String(raw[4]||''),hint:String(raw[5]||''),
+ const dom=m&&typeof m==='object'?m.domain||'':'',lvl=m&&typeof m==='object'?m.grade||0:0;
+ return{text:String(raw[0]),key,topic,dom,lvl,correct,en:String(raw[3]||''),vi:String(raw[4]||''),hint:String(raw[5]||''),
   options:shuffle(raw[1].map((v,i)=>({v:String(v),ok:i===raw[2]}))),removed:false}}
 const GEN={math:window.ANDY_GEN_MATH,english:window.ANDY_GEN_ENGLISH};
 function genWeight(g,w){return t=>{const st=P.stats[qkey(g,w,'gen:'+t)];return st&&st.w>st.c?3:st&&st.w>0?1:0}}
@@ -613,7 +624,9 @@ function buildRound(n,g=P.grade,w=S.world){const list=(bank[String(g)]||{})[w]||
  const nGen=gen?Math.min(n,Math.max(Math.ceil(n*(w==='math'?.6:.5)),n-list.length)):0;
  const scored=list.map(raw=>{const st=P.stats[qkey(g,w,raw[0])]||{c:0,w:0};const tier=st.w>st.c?0:(st.c+st.w===0?1:2+st.c*.1);return{raw,s:tier+Math.random()*.95}});
  scored.sort((a,b)=>a.s-b.s);const raws=scored.slice(0,n-nGen).map(x=>x.raw);
- if(nGen){const seen=new Set(raws.map(r=>r[0]));let tries=0;while(raws.length<n&&tries++<8){gen.generate(g,n,genWeight(g,w)).forEach(r=>{if(raws.length<n&&!seen.has(r[0])){seen.add(r[0]);raws.push(r)}})}}
+ if(nGen){const seen=new Set(raws.map(r=>r[0]));const fq=w==='math'&&g===P.grade?focusQs(Math.ceil(n*.5)):[];
+  fq.forEach(r=>{if(raws.length<n&&!seen.has(r[0])){seen.add(r[0]);raws.push(r)}});
+  let tries=0;while(raws.length<n&&tries++<8){gen.generate(g,n,genWeight(g,w)).forEach(r=>{if(raws.length<n&&!seen.has(r[0])){seen.add(r[0]);raws.push(r)}})}}
  return shuffle(raws).map(r=>normalize(r,g,w))}
 function enemy(){return WORLDS[S.world].stages[S.stage]}
 function begin(stage){if(window.AndyAccess&&!AndyAccess.canPlay()){AndyAccess.showPaywall();return}if(stage!==undefined)S.stage=stage;const e=enemy();
@@ -638,7 +651,7 @@ function paintArena(){const h=$('#hearts');if(!h)return;
  $('#track').innerHTML=S.round.map((_,i)=>`<i class="${S.results[i]===true?'ok':S.results[i]===false?'no':i===S.qi?'now':''}"></i>`).join('');
  const cn=$('#coins');if(cn)cn.textContent='⭐ '+P.coins}
 function challengeHTML(){const q=S.round[S.qi];
- return `<div class="eyebrow">✦ QUESTION ${S.qi+1} · ${esc(WORLDS[S.world].name.toUpperCase())} ✦${q.topic?`<span class="topic">📘 ${esc(q.topic)}</span>`:''}</div>
+ return `<div class="eyebrow">✦ QUESTION ${S.qi+1} · ${esc(WORLDS[S.world].name.toUpperCase())} ✦${q.topic?`<span class="topic">${q.dom&&q.lvl<P.grade?'🎯 Luyện phần yếu · ':'📘 '}${esc(q.topic)}</span>`:''}</div>
  <div class="question" id="qtext">${esc(q.text)}</div>
  <div class="speed" aria-hidden="true"><i></i></div>
  <div class="answers">${q.options.map((o,i)=>`<button class="answer" data-answer="${i}" aria-label="Answer ${i+1}: ${esc(o.v)}"><span class="k" aria-hidden="true">${i+1}</span>${esc(o.v)}</button>`).join('')}</div>
@@ -660,7 +673,7 @@ function shoot(fromEl,toEl,emoji,onHit){const arena=$('#arena');if(!arena||reduc
 function knock(el){if(!el||reduce)return;el.animate([{transform:'translateX(0)',filter:'brightness(1)'},{transform:'translateX(9px)',filter:'brightness(2.2)'},{transform:'translateX(-7px)'},{transform:'translateX(0)',filter:'brightness(1)'}],{duration:380})}
 function answer(i){if(S.answered||S.page!=='battle')return;const q=S.round[S.qi],o=q.options[i];if(!o||o.gone)return;
  S.answered=true;const ms=performance.now()-S.t0,ok=o.ok,e=enemy();
- const st=P.stats[q.key]||(P.stats[q.key]={c:0,w:0});ok?st.c++:st.w++;S.results[S.qi]=ok;logAnswer(q,ok,ms);
+ const st=P.stats[q.key]||(P.stats[q.key]={c:0,w:0});ok?st.c++:st.w++;S.results[S.qi]=ok;logAnswer(q,ok,ms);focusLog(q,ok);
  const btns=[...app.querySelectorAll('.answer')];
  btns.forEach((b,j)=>{b.disabled=true;if(q.options[j].ok){b.classList.add('correct');b.insertAdjacentHTML('beforeend',' ✔')}else if(j===i)b.classList.add('wrong');else b.classList.add('dim')});
  $('.speed')?.classList.add('stop');
@@ -775,6 +788,7 @@ function parents(){const g=P.grade,ws=worldsFor(g);
  tricky.sort((a,b)=>(b.v.w-b.v.c)-(a.v.w-a.v.c));
  return `<div class="screen">${header(true)}
  ${weeklyHTML()}
+ ${placePanel()}
  <div class="panel"><h2>👪 Góc Ba Mẹ · Lớp ${g}</h2><p>Kết quả lưu trên máy này. Đổi lớp ở màn hình chính để xem lớp khác.</p>
  <div style="overflow-x:auto"><table class="ptable"><thead><tr><th>THẾ GIỚI</th><th>ĐÚNG</th><th>SỐ CÂU</th><th>MÀN</th></tr></thead><tbody>${rows}</tbody></table></div>
  <p style="margin-top:12px">Level ${level()} (${title()}) · Tổng ${P.earned} ⭐ đã kiếm · ${P.badges.length}/${BADGES.length} huy hiệu · Chuỗi ${P.daily.streak} ngày</p></div>
@@ -810,6 +824,75 @@ function weeklyHTML(){const a=weekStats(0),b=weekStats(1),n=a.c+a.w,pct=n?Math.r
  ${n?'<button class="ghost full" data-a="share-report">📤 Gửi báo cáo (tin nhắn / email)</button>':''}</div>`}
 async function shareReport(){const t=weekText();try{if(navigator.share){await navigator.share({title:"Báo cáo tuần Andy's Worlds",text:t});return}}catch(e){if(e&&e.name==='AbortError')return}
  try{await navigator.clipboard.writeText(t);toast('Đã sao chép báo cáo ✓')}catch(e){toast('Không chia sẻ được')}}
+
+/* ---------- Math check-up (placement) & focus practice ---------- */
+const DOMS=[['N','Number and Operations','Số và phép tính'],['ALG','Algebra and Algebraic Thinking','Đại số và tư duy đại số'],['MD','Measurement and Data','Đo lường và dữ liệu'],['GEO','Geometry','Hình học']];
+const DOM_ADVICE={N:'Ôn phân số, số thập phân, phép nhân chia. Mỗi ngày 5–10 câu ở đúng mức con đang có, rồi tăng dần.',ALG:'Ôn quy luật số, biểu thức và phương trình. Nhờ con nói to từng bước khi giải.',MD:'Ôn đổi đơn vị, diện tích, thể tích, trung bình. Dùng thước, cân, ly đo trong nhà để luyện.',GEO:'Ôn góc, hình và tọa độ. Cho con vẽ hình ra giấy rồi giải thích.'};
+const PT_PER=5;
+const cmpGrade=()=>Math.min(P.grade,8);
+const lvLabel=l=>l<=3?'Dưới lớp 4':l>=9?'Lớp 8+':'Lớp '+l;
+const lvLabelEn=l=>l<=3?'Below Grade 4':l>=9?'Grade 8+':'Grade '+l;
+function lvDot(l){if(l==null)return 'pd-n';const d=Math.min(l,8)-cmpGrade()+(l>=9?1:0);return d>=0?'pd-g':d===-1?'pd-y':d===-2?'pd-r':'pd-rr'}
+const DOT_KEY=`<div class="pkey"><span><i class="pdot pd-g"></i>Đúng hoặc trên lớp</span><span><i class="pdot pd-y"></i>Dưới 1 lớp</span><span><i class="pdot pd-r"></i>Dưới 2 lớp</span><span><i class="pdot pd-rr"></i>Dưới 3 lớp trở lên</span></div>`;
+function overallOf(lv){const v=DOMS.map(d=>lv[d[0]]).filter(x=>x!=null);return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null}
+function placeTable(pl,prev){const ov=overallOf(pl.levels),pv=prev?prev.levels:null;
+ return `<table class="ptab"><tr class="ov"><td>Overall Math · Toán tổng quát</td><td><i class="pdot ${lvDot(ov)}"></i>${lvLabel(ov)}</td></tr>
+ ${DOMS.map(([k,en,vi])=>{const l=pl.levels[k],p=pv&&pv[k];return `<tr><td>${en}<br><small style="font-weight:600">${vi}</small></td><td style="white-space:nowrap"><i class="pdot ${lvDot(l)}"></i>${lvLabel(l)}${p!=null&&l!=null&&p!==l?`<br><small>${l>p?'📈':'📉'} lần trước ${lvLabel(p)}</small>`:''}</td></tr>`}).join('')}</table>${DOT_KEY}`}
+function focusCfg(){return P.focus&&typeof P.focus==='object'?P.focus:null}
+function weakDoms(){const f=focusCfg();if(!f||!f.on)return [];return DOMS.map(d=>d[0]).filter(k=>f.lv[k]!=null&&f.lv[k]<cmpGrade())}
+function focusQs(n){const M=window.ANDY_GEN_MATH,ws=weakDoms();if(!M||!M.generateDomain||!ws.length)return [];const f=focusCfg();
+ const gaps=ws.map(k=>cmpGrade()-f.lv[k]),tot=gaps.reduce((a,b)=>a+b,0);let out=[];
+ ws.forEach((k,i)=>{const cnt=Math.max(1,Math.round(n*gaps[i]/tot));out=out.concat(M.generateDomain(Math.max(4,f.lv[k]),k,cnt))});return shuffle(out).slice(0,n)}
+function focusLog(q,ok){const f=focusCfg();if(!f||!f.on||!q.dom||!q.lvl||q.lvl!==Math.max(4,f.lv[q.dom]||0))return;
+ const pr=f.prog[q.dom]||(f.prog[q.dom]={c:0,w:0});ok?pr.c++:pr.w++;
+ if(pr.c+pr.w>=10){if(pr.c/(pr.c+pr.w)>=.8&&f.lv[q.dom]<cmpGrade()){f.lv[q.dom]=Math.max(4,f.lv[q.dom])+1;const nm=DOMS.find(d=>d[0]===q.dom)[2];setTimeout(()=>toast(`🎉 ${nm}: lên ${lvLabel(f.lv[q.dom])}!`),900)}f.prog[q.dom]={c:0,w:0}}}
+function setPlacement(levels,src){const prev=P.place||null;P.place={levels,src,date:today(),grade:P.grade,prev:prev?{levels:prev.levels,date:prev.date}:null};
+ P.focus={on:true,lv:Object.assign({},levels),prog:{}};DOMS.forEach(([k])=>{if(P.focus.lv[k]!=null&&P.focus.lv[k]<4)P.focus.lv[k]=4});save()}
+function placePanel(){const pl=P.place,f=focusCfg(),ws=weakDoms();
+ return `<div class="panel"><h2>📝 Trình độ Toán của con</h2>
+ ${pl?`<p>${pl.src==='school'?'Kết quả bài kiểm tra ở trường':'Bài kiểm tra trong game'} · ngày ${pl.date.split('-').reverse().join('/')} · so với lớp ${P.grade}</p>${placeTable(pl,pl.prev)}`:'<p>Cho con làm bài kiểm tra 20 câu (khoảng 10–15 phút) để biết con đang ở mức lớp mấy trong 4 phần: Số và phép tính, Đại số, Đo lường và dữ liệu, Hình học. Hoặc nhập kết quả bài kiểm tra ở trường (ví dụ tờ báo cáo Toán của con).</p>'}
+ ${pl?`<h3 style="margin:12px 0 4px">🎯 Luyện tập theo kết quả: ${f&&f.on?'<span style="color:#2e9e4f">ĐANG BẬT</span>':'đang tắt'}</h3>
+  ${f&&f.on?(ws.length?`<p>Trong thế giới Toán, khoảng một nửa số câu sẽ là phần con còn yếu, bắt đầu ở đúng mức con đang có. Con làm đúng 8/10 câu thì tự lên 1 lớp.</p>${ws.map(k=>{const d=DOMS.find(x=>x[0]===k),pr=f.prog[k]||{c:0,w:0};return `<div class="fprog"><i class="pdot ${lvDot(f.lv[k])}"></i>${d[2]}: đang luyện ${lvLabel(Math.max(4,f.lv[k]))} → mục tiêu lớp ${cmpGrade()} · ${pr.c}/${pr.c+pr.w} đúng</div><p style="margin:0 0 6px 22px;font-size:12px">💡 ${DOM_ADVICE[k]}</p>`}).join('')}`:'<p>🎉 Con đã đạt đúng lớp ở cả 4 phần! Game sẽ cho câu hỏi bình thường theo lớp.</p>'):''}
+  <button class="ghost full" data-a="focus-toggle">${f&&f.on?'⏸ Tắt luyện theo kết quả':'▶ Bật luyện theo kết quả'}</button>`:''}
+ <button class="primary" data-a="placeintro" style="margin-top:10px">📝 ${pl?'Cho con kiểm tra lại':'Cho con làm bài kiểm tra'} (20 câu)</button>
+ <button class="ghost full" data-a="placeedit">✏️ Nhập kết quả ở trường</button></div>`}
+function placeintro(){return `<div class="screen">${header(true)}<div class="panel ptest"><h2>📝 Math Check-up</h2>
+ <p><b>For you:</b> 20 questions about numbers, algebra, measurement and geometry. Some are easy, some are hard. That's OK! No hints and no hearts. Just do your best. If you really don't know, tap "I don't know".</p>
+ <p><b>Ba mẹ:</b> Bài kiểm tra tự điều chỉnh: con làm đúng thì câu sau khó hơn (lớp cao hơn), sai thì dễ hơn. Mỗi phần 5 câu, từ lớp 4 đến lớp 8. Kết quả hiện giống tờ báo cáo ở trường (màu xanh, vàng, đỏ). Nên để con tự làm, không nhắc bài.</p>
+ <button class="primary" data-a="placestart">▶ START · Bắt đầu</button></div></div>`}
+let PT=null;
+function placeStart(){const st=Math.max(4,Math.min(8,cmpGrade()-1));PT={i:0,order:[],dom:{},lock:false,t0:performance.now()};
+ DOMS.forEach(([k])=>PT.dom[k]={lv:st,credit:[],seen:new Set()});for(let r=0;r<PT_PER;r++)DOMS.forEach(([k])=>PT.order.push(k));
+ PT.q=placeNextQ();go('placetest')}
+function placeNextQ(){const k=PT.order[PT.i],d=PT.dom[k],M=window.ANDY_GEN_MATH;let raw=null;
+ for(let t=0;t<6&&!raw;t++){const c=M.generateDomain(d.lv,k,3).find(r=>!d.seen.has(r[0]));if(c)raw=c}
+ if(!raw)raw=M.generateDomain(d.lv,k,1)[0];d.seen.add(raw[0]);const q=normalize(raw,P.grade,'math');q.dk=k;q.g=d.lv;return q}
+function placetest(){if(!PT||!PT.q)return placeintro();const q=PT.q,d=DOMS.find(x=>x[0]===q.dk);
+ return `<div class="screen">${header(true)}<div class="panel ptest"><div style="display:flex;justify-content:space-between;align-items:center"><span class="chip">${d[1].toUpperCase()}</span><b>${PT.i+1}/${PT.order.length}</b></div>
+ <div class="pbar"><i style="width:${PT.i/PT.order.length*100}%"></i></div>
+ <div class="q">${esc(q.text)}</div>
+ <div class="answers">${q.options.map((o,i)=>`<button class="answer" data-pt="${i}"><span class="k">${i+1}</span>${esc(o.v)}</button>`).join('')}</div>
+ <button class="ghost full" data-pt="-1" style="margin-top:10px">🤷 I don't know · Con chưa biết</button>
+ <button class="tool" data-a="ptread" style="margin-top:8px">🔊 Hear it</button></div></div>`}
+function placeAnswer(i){if(!PT||PT.lock)return;PT.lock=true;const q=PT.q,d=PT.dom[q.dk],ok=i>=0&&q.options[i]&&q.options[i].ok;
+ const b=app.querySelector(`[data-pt="${i}"]`);if(b)b.classList.add('picked');sfx.tap();
+ {const k=today(),dd=P.days[k]||(P.days[k]={sec:0,c:0,w:0,s:{}});dd.sec+=Math.round(Math.min(performance.now()-(PT.t0||performance.now()),90000)/1000)}
+ d.credit.push(ok?(d.lv===8?9:d.lv):(d.lv===4?3:d.lv-1));d.lv=Math.max(4,Math.min(8,d.lv+(ok?1:-1)));
+ setTimeout(()=>{PT.i++;PT.lock=false;if(PT.i>=PT.order.length){placeFinish();return}PT.q=placeNextQ();PT.t0=performance.now();app.innerHTML=placetest();toTop()},350)}
+function placeFinish(){const lv={};DOMS.forEach(([k])=>{const c=PT.dom[k].credit.slice(-4);lv[k]=Math.round(c.reduce((a,b)=>a+b,0)/c.length)});
+ setPlacement(lv,"test");PT=null;sfx.win();confetti();go('placeresult')}
+function placeresult(){const pl=P.place;if(!pl)return placeintro();const ws=DOMS.filter(([k])=>pl.levels[k]<cmpGrade());
+ return `<div class="screen">${header(true)}<div class="panel"><h2>🏅 Check-up done! · Kết quả</h2><p>Great job finishing all 20 questions! · So với lớp ${P.grade} của con:</p>
+ ${placeTable(pl,pl.prev)}
+ ${ws.length?`<h3 style="margin:12px 0 4px">🎯 Phần cần luyện</h3>${ws.map(([k,,vi])=>`<p><b>${vi}</b> (${lvLabel(pl.levels[k])}): ${DOM_ADVICE[k]}</p>`).join('')}<p>✅ Đã <b>bật luyện theo kết quả</b>: trong thế giới Toán, game sẽ cho thêm câu ở các phần này, bắt đầu từ mức con đang có và tự tăng dần.</p>`:'<p>🎉 Con đạt đúng lớp ở cả 4 phần. Tuyệt vời!</p>'}
+ <p style="font-size:12px">Lưu ý: đây là bài kiểm tra ngắn để luyện tập, không thay thế bài kiểm tra chính thức ở trường.</p>
+ <button class="primary" data-a="playmath">⚔️ Luyện ngay · Play Math</button><button class="ghost full" data-a="parents">👪 Về Góc Ba Mẹ</button></div></div>`}
+function placeedit(){const pl=P.place,opts=l=>[3,4,5,6,7,8,9].map(v=>`<option value="${v}" ${l===v?'selected':''}>${lvLabel(v)}</option>`).join('');
+ return `<div class="screen">${header(true)}<div class="panel"><h2>✏️ Nhập kết quả ở trường</h2>
+ <p>Nhìn tờ báo cáo Toán của con (cột "Placement"), chọn mức lớp cho từng phần. "Early 5" hay "Mid 5" thì chọn Lớp 5. Game sẽ dùng kết quả này để cho con luyện đúng phần còn yếu.</p>
+ ${DOMS.map(([k,en,vi])=>`<label style="display:block;margin:10px 0 4px;font-weight:800">${en}<br><small style="font-weight:600">${vi}</small></label><select class="pselect" id="pe-${k}">${opts(pl?pl.levels[k]:cmpGrade())}</select>`).join('')}
+ <button class="primary" data-a="placesave" style="margin-top:14px">💾 Lưu · Save</button></div></div>`}
+function placeSave(){const lv={};DOMS.forEach(([k])=>{const el=$('#pe-'+k);lv[k]=el?Number(el.value):cmpGrade()});setPlacement(lv,'school');toast('Đã lưu ✓');go('parents')}
 
 /* ---------- confetti ---------- */
 function confetti(){if(reduce)return;const cv=$('#confetti'),ctx=cv.getContext('2d');if(!ctx)return;const W=cv.width=innerWidth,H=cv.height=innerHeight;
@@ -1217,17 +1300,18 @@ function rresult(){if(!RC||!RC.rank)return rlobby();const host=RN&&RN.role==='ho
  </div></div>`}
 
 /* ---------- render & events ---------- */
-const PAGES={home,map,battle,result,parents,shop,duelsetup,duel,duelresult,online,gintro,gresult,gballoon,gmemory,gspeed,rlobby,rrace,rresult};
+const PAGES={home,map,battle,result,parents,shop,placeintro,placetest,placeresult,placeedit,duelsetup,duel,duelresult,online,gintro,gresult,gballoon,gmemory,gspeed,rlobby,rrace,rresult};
 const MUSIC_PAGES=['battle','duel','gballoon','gspeed','rrace'];
 function render(){hush();if(!MUSIC_PAGES.includes(S.page))musicStop();if(!['gballoon','gmemory','gspeed'].includes(S.page))gameStop();if(S.page!=='rrace'&&RC&&!RC.over)rcStop();if(RN&&!['rlobby','rrace','rresult'].includes(S.page))rnClose();if(S.page!=='duel')duelClear();if(NET&&!['online','duel','duelresult'].includes(S.page))netClose();app.innerHTML=(PAGES[S.page]||home)();toTop();if(S.page==='battle')showQuestion()}
 function go(page){S.page=page;S.resetArm=false;render()}
-window.__andyRender=()=>{if(S.page==='home'||S.page==='parents'){const y=app.scrollTop,wy=scrollY;app.innerHTML=PAGES[S.page]();app.scrollTop=y;scrollTo(0,wy)}};window.__andyToast=toast;
+window.__andyPT=()=>PT&&PT.q;window.__andyRound=()=>S.round.map(q=>(q.dom?q.dom+q.lvl+':':'')+q.text.slice(0,40));window.__andyRender=()=>{if(S.page==='home'||S.page==='parents'){const y=app.scrollTop,wy=scrollY;app.innerHTML=PAGES[S.page]();app.scrollTop=y;scrollTo(0,wy)}};window.__andyToast=toast;
 $('#mbtn').addEventListener('click',modalButton);
 app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;ac();
  if(d.grade){P.grade=Number(d.grade);save();sfx.tap();render();toast('Grade '+P.grade+' ✓');return}
  if(d.world){S.world=d.world;sfx.tap();go('map');return}
  if(d.stage!==undefined){const s=Number(d.stage);if(!unlocked(P.grade,S.world,s)){toast('🔒 Win the stage before first!');sfx.bad();return}sfx.tap();begin(s);return}
  if(d.answer!==undefined){answer(Number(d.answer));return}
+ if(d.pt!==undefined){placeAnswer(Number(d.pt));return}
  if(d.dans!==undefined){if(e.detail===0){const [i,j]=d.dans.split('-').map(Number);duelAnswer(i,j)}return}
  if(d.av){const [i,a]=d.av.split('|');duelCfg().players[i].emoji=a;save();sfx.tap();duelRerender();return}
  if(d.pgrade){const [i,g]=d.pgrade.split('|');duelCfg().players[i].grade=Number(g);save();sfx.tap();duelRerender();return}
@@ -1252,6 +1336,13 @@ app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dis
   case 'say-vi':speak(S.round[S.qi].vi,'vi-VN');break;
   case 'parents':go('parents');break;
   case 'share-report':shareReport();break;
+  case 'placeintro':go('placeintro');break;
+  case 'placestart':placeStart();break;
+  case 'placeedit':go('placeedit');break;
+  case 'placesave':placeSave();break;
+  case 'ptread':PT&&PT.q&&speak(PT.q.text);break;
+  case 'focus-toggle':{const f=focusCfg();if(f){f.on=!f.on;save();toast(f.on?'🎯 Đã bật':'Đã tắt')}const y=app.scrollTop,wy=scrollY;app.innerHTML=parents();app.scrollTop=y;scrollTo(0,wy)}break;
+  case 'playmath':S.world='math';go('map');break;
   case 'paywall':window.AndyAccess&&AndyAccess.showPaywall();break;
   case 'iap-restore':window.AndyAccess&&AndyAccess.restore();break;
   case 'shop':go('shop');break;
