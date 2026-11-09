@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<html lang="en"><head><meta charset="utf-8"><meta id="vp" name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<script>/* iPad: lay the game out at phone width (~500-540 CSS px) so the whole screen is filled and everything is scaled up */
+(function(){try{var w=Math.min(screen.width,screen.height),h=Math.max(screen.width,screen.height);if(w>=700&&navigator.maxTouchPoints>0&&/iPad|Macintosh|Android/.test(navigator.userAgent)){var vw=Math.round(Math.max(460,Math.min(560,w/h*720)));
+document.getElementById('vp').setAttribute('content','width='+vw+',user-scalable=no,viewport-fit=cover');document.documentElement.className+=' tablet'}}catch(e){}})();</script>
 <title>Andy's Worlds</title>
 <meta name="description" content="Andy's Worlds 3.0 — learning boss-battle adventure for grades 4–10">
 <meta name="theme-color" content="#0d1a52">
@@ -24,6 +27,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 button:disabled{cursor:default}
 img{display:block;max-width:100%}
 #app{position:relative;width:min(100%,480px);min-height:100svh;margin:auto;isolation:isolate;overflow-x:hidden;background:linear-gradient(160deg,#26a8eb,#426dcc 55%,#3e248e)}
+.tablet #app{width:100%}
 #app::before{content:"";z-index:-2;inset:0;position:absolute;background:radial-gradient(circle at 75% 5%,#fff8 1px,transparent 2px),radial-gradient(circle at 13% 22%,#fff8 2px,transparent 3px);background-size:97px 91px,163px 157px;opacity:.6}
 @media(min-width:600px){
   body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:radial-gradient(circle,#364e9a,#070c30 70%)}
